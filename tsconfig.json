@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+      "target": "es5",  // 编译的目标
+      "allowJs": true,
+      "skipLibCheck": true,
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "experimentalDecorators": true, // 开启装饰器使用
+      "strict": true,
+      "forceConsistentCasingInFileNames": true,
+      "noFallthroughCasesInSwitch": true,
+      "noUnusedLocals": false,
+      "noUnusedParameters": false,
+      "module": "esnext",
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "noEmit": false,
+      "jsx": "preserve",
+      "baseUrl": "./",
+      "paths": {
+        "@": ["src/"]
+      }
+    },
+    // 需要编译的目标文件夹
+    "include": ["./src/**/*"]
+  }
+  
