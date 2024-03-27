@@ -2,7 +2,7 @@ const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
-    entry:path.join(__dirname,"../src/index.tsx"),
+    entry:path.join(__dirname,"../src/main.tsx"),
     output:{
         filename:'bundle.js', // 每个输出js的名称
         path:path.join(__dirname,"../dist"), // 打包结果输出路径

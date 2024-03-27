@@ -1,6 +1,7 @@
 import React from "react";
-import Login from "../components/Login";
-import Layout from "../components/Layout"
+import Login from "../pages/Login";
+import Layout from "../layout"
+import Test from "../components/Test";
 
 const routes:any = [
     {
@@ -8,7 +9,7 @@ const routes:any = [
     },
     {
         path: "/",
-        element: <Layout />
+        element: <Layout></Layout>
     }
   ]
 
