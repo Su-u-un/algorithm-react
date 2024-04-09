@@ -1,5 +1,4 @@
 import React,{useState} from 'react';
-import { Bar } from 'react-chartjs-2';
 import ReactECharts from 'echarts-for-react';
 import { Array1DRenderer } from '../index';
 import styles from './ChartRenderer.module.less';

@@ -9,7 +9,7 @@ interface PlayerState {
 //initial
 const initialState : PlayerState = {
     chunks: [],
-    cursor: 0,
+    cursor: 1,
     lineIndicator:undefined
 }
 

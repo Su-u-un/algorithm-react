@@ -5,13 +5,8 @@ import { Provider } from 'react-redux';
 import store from './store';
 
 
-import routes from './router';
+import App from './router';
 import './assets/global.less'
-
- 
-function App() {
-  return useRoutes(routes) 
-}
 
 const root = document.getElementById('root');
 

@@ -1,26 +1,26 @@
 import {createSlice} from '@reduxjs/toolkit';
 
 interface CurrentState{
-    editingFile: string | undefined,
-    shouldBuild: boolean
+    files:Array<any>,
+    folder_id:number
 }
 
 const initialState:CurrentState = {
-    editingFile: undefined,
-    shouldBuild: true
+    files:[],
+    folder_id:0
 }
 
 const currentSlice = createSlice({
     name:'current',
     initialState,
     reducers:{
-        setEditingFile(state,action){
-            state.editingFile = action.payload
-            state.shouldBuild = true
+        setFolder(state,action){
+            state.files = action.payload[0]
+            state.folder_id = action.payload[1]
         },
+
     }
 })
 
-
-export const {setEditingFile} = currentSlice.actions
+export const {setFolder} = currentSlice.actions
 export default currentSlice.reducer

@@ -17,10 +17,11 @@
       "isolatedModules": true,
       "noEmit": false,
       "jsx": "preserve",
-      "baseUrl": "./",
+      "baseUrl": ".",
       "paths": {
-        "@": ["src/"]
-      }
+        "@/*": ["src/*"]
+      },
+      "lib":[ "dom", "es5", "es2015.promise" ,"es2015", "es2017"]
     },
     // 需要编译的目标文件夹
     "include": ["./src/**/*"]
