@@ -1,39 +1,45 @@
-import React from 'react';
-import { Layout, theme } from 'antd';
-import Charts from '../components/Charts';
-import Right from '../components/Right';
-import Left from '../components/Left';
-import Player from '../components/Player';
+import React, { useEffect, useState } from 'react';
+import { Layout } from 'antd';
 
-const { Header, Content,Sider } = Layout;
+import Sider from '../components/Sider';
+import Header from '../components/Header';
+import Content from '../components/Content';
+import {SplitPane,Pane} from 'react-split-pane';
+
+import { useSelector } from 'react-redux';
 
 const BasicLayout: React.FC = () => {
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
+  const {files} = useSelector(state => state.current)
+  
+  const [show, setShow] = useState(false)
+
+  // 这边对是否选中文件作监听，点击了目录就展示可视化，否则展示教程
+  useEffect(() => {
+    if(files.length){
+      setShow(true)
+    }
+  }, [files]);
 
   return (
-    <Layout hasSider>
-      <Sider
-        collapsible
-        style={{ overflow: 'auto', height: '100vh', position: 'fixed', left: 0, top: 0, bottom: 0 }}
-      >
-        <div className="demo-logo-vertical" />
-        <Left/>
-      </Sider>
-      <Layout style={{ marginLeft: 200 }}>
-        <Header style={{ padding: 0, background: colorBgContainer }} >
-          <Player/>
-        </Header>
-        <Content style={{ margin: '24px 16px 0', overflow: 'initial' ,display:'flex',flexDirection:'row'}}>
-          <div style={{height:'100%',width:'600px'}}>
-            <Charts/>
-          </div>
-          
-          <Right/>
-        </Content>
-      </Layout>
-    </Layout>
+    <div style={{display:'flex',height:'100vh'}}>
+      <SplitPane split="vertical">
+        <Pane maxSize='250px'>
+          <Sider/>
+        </Pane>
+        <Pane>
+        <Layout style={{ minHeight: '100vh'}}>
+          <Header/>
+          {
+            show
+            ?
+            <Content/>
+            :
+            <div>教程说明页</div>
+          }
+        </Layout>
+        </Pane>
+      </SplitPane>
+    </div>
   );
 };
 

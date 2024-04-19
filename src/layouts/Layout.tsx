@@ -1,6 +1,8 @@
 import React from 'react';
 import  ResizableContainer from '../components/ResizableContainer';
 import { HorizontalLayout } from './index';
+import {SplitPane} from 'react-split-pane';
+import './temp.css'
 
 class Layout {
   key: string;
@@ -47,12 +49,10 @@ class Layout {
     const horizontal = this instanceof HorizontalLayout;
 
     return(
-      <ResizableContainer key={this.key} ref={this.ref} weights={this.weights} horizontal={horizontal}
-                          onChangeWeights={this.handleChangeWeights}>
-        {
-          this.children.map(tracer => tracer && tracer.render())
-        }
-      </ResizableContainer>
+      <SplitPane split='horizontal' >
+        {this.children.map(tracer => tracer && tracer.render())}
+      </SplitPane>
+          
     )
     
   }

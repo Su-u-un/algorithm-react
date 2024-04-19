@@ -2,46 +2,63 @@ import React, {  useState, useRef, useEffect } from 'react';
 import { Slider, InputNumber ,Button,Radio,Col,Row  } from 'antd';
 import {useSelector,useDispatch} from 'react-redux'
 import { setCursor } from '../../store/play';
+import { setBuilding } from '../../store/current';
 
 import styles from './Player.module.less';
 
-let timer = null
+// 定时器
+let timer:number = 0
 
 const Player: React.FC = () => {
-  const [speed, setSpeed] = useState(2);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(false); // 播放中
   const {chunks,cursor} = useSelector((state: any) => state.player);
-
-  const [progress, setProgress] = useState(0)//进度
-  const [isPlay, setIsPlay] = useState(false)//是否播放
-
-useEffect(()=>{
-  dispatch(setCursor(progress))
-},[progress])
-
+  const {files,building} = useSelector(state => state.current)
+  const [progress, setProgress] = useState(1); // 进度
+  
   const dispatch = useDispatch()
 
-  // 判断cursor是否合法
+  // 监听building
+  useEffect(()=>{
+    if(building === true) setProgress(1)
+    // 在building过后再置否，用于重新进行判断
+    setTimeout(()=>{
+      dispatch(setBuilding(false))
+    })
+  },[building])
+
+  // 监听是否更换目录
+  useEffect(()=>{
+    setProgress(1)
+  },[files])
+
+  // 监听进度条变化，更新cursor
+  useEffect(()=>{
+    if(building !== true){
+      dispatch(setCursor(progress))
+    }
+  },[progress])
+
+  // 判断进度是否合法
   const isAble = (val:number)=>{
     return 1 <= val && val <= chunks.length
   }
   // 进度条前进后退
-  const handleBtn = (e) => {
-    // pause()
-    const temp = cursor+(e.target.value-0)
+  const handleBtn = (e:any) => {
+    const temp = progress+(e.target.value-0)
     setProgress(temp)
   }
 
-  const next = (pre) => {
-    if(isAble(++pre)) return ++pre
+  // 继续播放
+  const next = (pre:number) => {
+    if(isAble(++pre)) return pre++
     else {
-    setPlaying(false);
+      setPlaying(false);
       window.clearInterval(timer);
       return 1
     }
   }
 
-  const onChange = (val) => {
+  const onChange = (val:number) => {
     setProgress(val)
   }
 
@@ -60,7 +77,7 @@ useEffect(()=>{
   };
 
   return (
-    <div>
+    <div style={{marginLeft:'20px',width:'600px'}}>
       <Row>
         <Col span={4}>
           {
@@ -71,20 +88,20 @@ useEffect(()=>{
           }
         </Col>
         <Col span={4}>
-          <Radio.Group value={cursor} onChange={handleBtn}>
+          <Radio.Group value={progress} onChange={handleBtn}>
             <Radio.Button value="-1" disabled={!isAble(cursor-1)}>&lt;</Radio.Button>
             <Radio.Button value="+1" disabled={!isAble(cursor+1)}>&gt;</Radio.Button>
           </Radio.Group>
         </Col>
         <Col span={8}>
-          <Slider min={1} max={chunks.length?chunks.length:1} value={cursor} onChange={onChange}/>
+          <Slider style={{ marginTop: '25px' }} min={1} max={chunks.length?chunks.length:1} value={cursor} onChange={onChange}/>
         </Col>
         <Col span={8}>
           <InputNumber
             min={1}
             max={chunks.length}
             style={{ margin: '0 16px' }}
-            value={cursor}
+            value={progress}
             onChange={onChange}
           />
         </Col>

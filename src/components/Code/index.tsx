@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState, useCallback, useLayoutEffect } from
 import styles from './Code.module.less'
 import {debounce,cloneDeep,merge} from 'lodash';
 import { Tabs, Button } from 'antd';
-import axios from 'axios';
+import file from '../../api/file'
 import { useDispatch, useSelector } from "react-redux";
 import { setChunks, setCursor, setLineIndicator } from "../../store/play";
+import { setBuilding } from "../../store/current"
 import Editor from "../Editor";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
@@ -15,7 +16,6 @@ const Code: React.FC = () => {
   const [activeKey, setActiveKey] = useState('');
   const [items, setItems] = useState([]);
   const [activeText,setActiveText] = useState('')
-  const [building, setBuilding] = useState(false);
 
   useEffect(() => {
     if(files.length){
@@ -28,8 +28,8 @@ const Code: React.FC = () => {
         }
       })
       setActiveKey(initialItems[0].key)
-      setItems(initialItems)
       setActiveText(initialItems[0].children.props.value)
+      setItems(initialItems)
     }
   },[files])
 
@@ -41,13 +41,15 @@ const Code: React.FC = () => {
 
   const newTabIndex = useRef(0);
 
-  const button = { left: <Button onClick={build}>Build</Button>, right: <Button onClick={save}>Save</Button> }
+  const button = { left: <Button style={{ marginLeft: 8 }} onClick={build}>Build</Button>, right: <Button onClick={save}>Save</Button> }
 
   const dispatch = useDispatch()
 
 
   // 点击后把代码发送到服务器，接收返回的命令集
   async function build(){
+    // 通知进度条置1
+    dispatch(setBuilding(true))
     // 保存当前
     save()
     // 重置chart
@@ -55,13 +57,10 @@ const Code: React.FC = () => {
     try {
     const realurl = files.find((file) => file.name === activeKey).realurl
 
-      const response = await axios.post('http://localhost:3000/file/build',{
+      const response = await file.build({
         'url':realurl
       });
-      // setInit()
-      setBuilding(true);
-        const commands = response.data.data
-          setBuilding(false);
+        const commands = response.data
           reset(commands);
           dispatch(setCursor(1))
     } catch (error) {
@@ -101,20 +100,12 @@ const Code: React.FC = () => {
     const temp = files.find((file) => file.name === activeKey)
     const realurl = temp?temp.realurl:''
     //存入数据库
-    if(realurl){
-      axios.post('http://localhost:3000/file/save',{
-          "filename":activeKey,
-          "content":activeText,
-          "realurl":realurl
-        });
-    }
-    else{
-      axios.post('http://localhost:3000/file/save',{
-          "filename":activeKey,
-          "content":activeText,
-          "folderid":folder_id
-        });
-    }
+    file.save({
+        "filename":activeKey,
+        "content":activeText,
+        "realurl":realurl,
+        "folderid":folder_id
+    })
   }
 
   // 切换tab
@@ -178,6 +169,7 @@ const Code: React.FC = () => {
 
   return (
     <Tabs
+    centered={true}
       tabBarExtraContent={button}
       type="editable-card"
       onChange={onChange}

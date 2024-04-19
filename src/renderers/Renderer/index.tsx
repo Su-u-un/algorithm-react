@@ -99,7 +99,7 @@ class Renderer extends React.Component {
     return (
       <div className={classes(styles.renderer, className)} onMouseDown={this.handleMouseDown}
            onWheel={this.handleWheel}>
-        {/* <Ellipsis className={styles.title}>{title}</Ellipsis> */}
+        <Ellipsis className={styles.title}>{title}</Ellipsis>
         {
           this.renderData()
         }

@@ -1,21 +1,29 @@
 import React, { useEffect, useState, useRef,useLayoutEffect } from 'react';
 import * as TracerClasses from '../../tracers';
 import * as LayoutClasses from '../../layouts';
-import { useSelector, useDispatch } from 'react-redux';
-// import { setChunks, setCursor, setLineIndicator } from '../../store/play';
+import { useSelector,useDispatch } from 'react-redux';
+import { setBuilding } from '../../store/current';
+
 
 const Charts = () => {
     const [val, setVal] = useState(null)
     let objects = {}
     const {chunks,cursor} = useSelector((state: any) => state.player);
-    // const dispatch = useDispatch()
-    let [prev,setPrev] = useState(null)
+    const {building} = useSelector(state => state.current)
 
+    const dispatch = useDispatch()
 
     useEffect(() => {
         update(chunks, cursor);
         // 接受新的state
       }, [cursor]);
+
+    //   useEffect(() => {
+    //     if( building === true ) update(chunks, cursor);
+    //     return () => {
+    //         dispatch(setBuilding(false))
+    //     }
+    //   },[building])
 
     const reset = ()=>{
         setVal(null)
@@ -31,13 +39,6 @@ const Charts = () => {
           applyingChunks = chunks.slice(0, cursor);
         }
         applyingChunks.forEach(chunk => applyChunk(chunk));
-    
-        // const lastChunk:any = applyingChunks[applyingChunks.length - 1];
-        // if (lastChunk && lastChunk.lineNumber !== undefined) {
-        //   dispatch(setLineIndicator({ lineNumber: lastChunk.lineNumber, cursor }));
-        // } else {
-        //   dispatch(setLineIndicator(undefined));
-        // }
       }
 
     function applyChunk(chunk: any) {
@@ -71,7 +72,7 @@ const Charts = () => {
 
 
     return (
-        <div>
+        <div style={{height:'100%'}}>
             {val && val.render()}
         </div>
     )

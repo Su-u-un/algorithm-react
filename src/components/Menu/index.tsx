@@ -1,24 +1,32 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Tree, Button, Input, Space, Dropdown, Menu, message } from 'antd';
-import { useMount } from 'react-use';
-import styles from './Left.module.less'
+import styles from './Menu.module.less'
 import DropdownInput from "../DropdownInput";
 import { useDispatch } from 'react-redux';
+import {getUserInfo} from '../../util/auth'
 import {setFolder} from '../../store/current'
-import { FormOutlined, DeleteOutlined, DashOutlined } from '@ant-design/icons'
-import { getUserInfo } from '../../util/auth';
-import axios from 'axios'
+import { DashOutlined } from '@ant-design/icons'
+import file from '../../api/file';
 import _ from 'lodash';
 
 const { DirectoryTree } = Tree
+interface MenuProps {
+  data?: any;
+  type?:any;
+}
 
-
-const Left: React.FC = () => {
+const BaseMenu: React.FC<MenuProps> = (props) => {
   // 目录数据
+  const data = props.data
+  const type = props.type
+
+  const username = JSON.parse(getUserInfo()!)
+
   // 树数据
   const [treeData, setTreeData] = useState<any>()
   const refInput = useRef<any>(null);
   const [expandedKeys, setExpandedKeys] = useState<any[]>([]);
+  const [defaultKey, setDefaultKey] = useState<any[]>([]);
 
   const dispatch = useDispatch();
 
@@ -27,37 +35,9 @@ const Left: React.FC = () => {
     message.info(mes);
   };
 
-  // 从后端获取文件数据并处理
+  // 处理传入的文件数据
   useEffect(() => {
-    const temp = JSON.parse(getUserInfo()!)
-    // const obj = {}
-    // temp.forEach(item => {
-    //     const { folder_name, algo_type,id } = item;
-    //     if (!obj[algo_type]) {
-    //         obj[algo_type] = [];
-    //     }
-    //     obj[algo_type].push(folder_name);
-    // });
-    // let arr: any = []
-
-    // Object.keys(obj).forEach((key: string) => {
-    //   let temp: any = {}
-    //   temp.title = key
-    //   temp.key = key
-    //   temp.isInput = false
-    //   temp.selectable = false
-    //   temp.children = obj[key].map((item: string) => {
-    //     return {
-    //       title: item,
-    //       key: item,
-    //       isInput: false,
-    //       isLeaf: true,
-    //       propKey: key
-    //     }
-    //   })
-    //   arr.push(temp)
-    // })
-    const arr = temp.reduce((acc, cur) => {
+    const arr = data.reduce((acc, cur) => {
       const existingType = acc.find(item => item.title === cur.algo_type);
       if (existingType) {
           existingType.children.push({
@@ -69,6 +49,7 @@ const Left: React.FC = () => {
       } else {
           acc.push({ 
             title: cur.algo_type, 
+            key: cur.algo_type,
             selectable: false,
             isInput: false, 
             children: [{ 
@@ -81,8 +62,16 @@ const Left: React.FC = () => {
           });
       }
       return acc;
-  }, []);
+    }, []); 
+    arr[0].children[0].selected = true
     setTreeData(arr)
+    // 自动展开第一项
+    // setExpandedKeys([arr[0].key])
+    // 自动展示第一项中的第一项
+    if(type==='list') {
+      // onSelect([arr[0].children[0].key],{selected:true,node:{key:arr[0].children[0].key,propKey:arr[0].key}})
+    }
+  
   }, [])
 
   // ============
@@ -182,9 +171,8 @@ const Left: React.FC = () => {
       return;
     }
     // 如果和已有文件重名，不允许使用
-    const arr = JSON.parse(getUserInfo()!)
     const obj:any = {}
-    arr.forEach(item => {
+    data.forEach(item => {
         const { folder_name, algo_type,id } = item;
         if (!obj[algo_type]) {
             obj[algo_type] = [];
@@ -220,18 +208,18 @@ for (const item of items) {
         item.key = data
         // 存在说明是新增节点
         if(propKey) {
-          item.propKey = propKey
-          const response = await axios.post('http://localhost:3000/file/add',{
-            'foldername':key,
-            'username':"www",
-            'filename':propKey
-          });
+          // item.propKey = propKey
+          // const response = await axios.post('http://localhost:3000/file/add',{
+          //   'foldername':key,
+          //   'username':"www",
+          //   'filename':propKey
+          // });
         }else{
-          const response = await axios.post('http://localhost:3000/file/add',{
-            'foldername':key,
-            'username':"www",
-            'filename':propKey
-          });
+          // const response = await axios.post('http://localhost:3000/file/add',{
+          //   'foldername':key,
+          //   'username':"www",
+          //   'filename':propKey
+          // });
         }
         return _.omit(item, "isInput");
       } else if (item?.children) {
@@ -291,14 +279,22 @@ for (const item of items) {
   const onSelect = async (keys,info) => {
     const { key, propKey } = info.node
     // 点击拿到文件内容，存入store，代码区读取store，渲染代码并且build
-    const res = await axios.get('http://localhost:3000/file/readfile',{params:{
-            'foldername':key,
-            'username':"www",
-            'algotype':propKey
-          }});
-    dispatch(setFolder([res.data.data,res.data.id]))
-
+     const res = await file.readFile({
+        'foldername':key,
+        'username':username,
+        'algotype':propKey
+      })
+      dispatch(setFolder([res.data,res.id]))
   };
+  const onSelect1 = async (keys,info) => {
+    const { key, propKey } = info.node
+    const res = await file.readPublic({
+      'foldername':key,
+      'algotype':propKey
+    })
+    // dispatch(setFolder([res.data,res.id]))
+    console.log(res)
+  }
 
   const onExpand = (keys) => {
     setExpandedKeys(keys);
@@ -306,15 +302,26 @@ for (const item of items) {
 
   return (
     <div className={styles.outer}>
-      <DirectoryTree
-        expandedKeys={expandedKeys}
-        onExpand={onExpand}
-        treeData={treeData}
-        onSelect={onSelect}
-        titleRender={titleRender}
-      />
+      {
+        type === 'list'
+        ?
+        <DirectoryTree
+          defaultSelectedKeys = {defaultKey}
+          expandedKeys={expandedKeys}
+          onExpand={onExpand}
+          treeData={treeData}
+          onSelect={onSelect}
+          titleRender={titleRender}
+        />
+        :
+        <DirectoryTree
+          treeData={treeData}
+          onExpand={onExpand}
+          onSelect={onSelect1}
+        />
+      }
     </div>
   );
 };
 
-export default Left;
+export default BaseMenu;
