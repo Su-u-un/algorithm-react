@@ -284,7 +284,7 @@ for (const item of items) {
         'username':username,
         'algotype':propKey
       })
-      dispatch(setFolder([res.data,res.id]))
+      dispatch(setFolder([res.data,res.id,type]))
   };
   const onSelect1 = async (keys,info) => {
     const { key, propKey } = info.node
@@ -292,12 +292,13 @@ for (const item of items) {
       'foldername':key,
       'algotype':propKey
     })
-    // dispatch(setFolder([res.data,res.id]))
+    dispatch(setFolder([res.data,res.id,type]))
     console.log(res)
   }
 
   const onExpand = (keys) => {
     setExpandedKeys(keys);
+    console.log(expandedKeys)
   };
 
   return (
@@ -316,6 +317,7 @@ for (const item of items) {
         :
         <DirectoryTree
           treeData={treeData}
+          expandedKeys={expandedKeys}
           onExpand={onExpand}
           onSelect={onSelect1}
         />
