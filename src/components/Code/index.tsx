@@ -34,7 +34,6 @@ const Code: React.FC = () => {
   }, [files])
 
   useEffect(() => {
-    console.log(items)
     if (items.length) build()
   }, [items])
 

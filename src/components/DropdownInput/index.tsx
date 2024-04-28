@@ -45,7 +45,7 @@ const DropdownInputFun: React.ForwardRefRenderFunction<
   const handleChange = _.debounce((e: any, isSure = false) => {
     const { value } = e?.target;
     const reg = /^[a-zA-Z0-9_\-\u4e00-\u9fa5]+$/;
-    if (!reg.test(value)) {
+    if (!reg.test(value)&&value) {
       setOpen(true);
     } else {
       setOpen(false);

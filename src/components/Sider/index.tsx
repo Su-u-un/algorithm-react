@@ -1,10 +1,7 @@
 import React from 'react';
 import Menu from '../Menu';
-import { Layout,Divider ,theme } from 'antd';
+import { Divider ,theme } from 'antd';
 import { getFileInfo,getPublicInfo } from '../../util/auth';
-
-
-const { Sider:AntdSider } = Layout;
 
 const Sider = ()=>{
     const { token: { colorBgContainer}} = theme.useToken();

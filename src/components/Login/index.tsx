@@ -74,12 +74,12 @@ const Login = (props:any,ref:any) => {
                 "phone":val.phone,
                 "captcha":val.captcha
             });
-            if(res.data.code === 0){
+            if(res.code === '0'){
                 // 存入用户信息、文件信息、公共文件信息和token
-                setFileInfo(JSON.stringify(res.data.list))
-                setUserInfo(JSON.stringify(res.data.username))
-                setPublicInfo(JSON.stringify(res.data.public))
-                setToken(JSON.stringify(res.data.token))
+                setFileInfo(JSON.stringify(res.list))
+                setUserInfo(JSON.stringify(res.username))
+                setPublicInfo(JSON.stringify(res.public))
+                setToken(JSON.stringify(res.token))
                 navigate("/")
             }else{
                 message.error(res.data.error);

@@ -1,7 +1,5 @@
 import axios from 'axios'
 import { getToken } from './auth'
-import { message } from 'antd'
-
 
 // 超时时间
 axios.defaults.timeout = 100000
@@ -22,7 +20,7 @@ axios.interceptors.request.use(config => {
   }
   return config
 }, error => {
-  message.error(error.response.data.mes)
+  alert(error.response.data.mes)
   return Promise.reject(error)
 })
 
@@ -32,18 +30,21 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(res => {
   return res.data
 }, error => {
-  if (error.response.status === 408 || error.response.status === 401) { // 需要重新登录
-    message.error(error.response.data.mes)
+   // 请求超时
+  if (error.code === "ERR_NETWORK") {
+    alert(error.message)
+  }else if (error.response.status === 408 || error.response.status === 401) { // 需要重新登录
+    alert(error.response.data.mes)
   } else if (error.response.status === 403) { // 请求被拒绝
-    message.error('403 请求被拒绝' + ': ' + error.response.data.error,)
+    alert('403 请求被拒绝' + ': ' + error.response.data.error,)
   } else if (error.response.status === 404) { // 路径找不到
-    message.error('404 路径找不到' + ': ' + error.response.data.error)
+    alert('404 路径找不到' + ': ' + error.response.data.error)
   } else if (error.response.status === 503) {
-    message.error('503 服务不可用' + ': ' + error.response.data.error)
+    alert('503 服务不可用' + ': ' + error.response.data.error)
   } else if (error.response.status === 504) {
-    message.error('504 网络连接错误' + ': ' + error.response.data.error)
+    alert('504 网络连接错误' + ': ' + error.response.data.error)
   } else {
-    message.error( error.response.data.error || error.response || error)
+    alert( error.response.data.error || error.response || error)
   }
 
   return Promise.reject(error)

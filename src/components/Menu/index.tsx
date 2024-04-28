@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Tree, Button, Input, Space, Dropdown, Menu, message } from 'antd';
+import { Tree, Button, Dropdown, Menu, message, Modal,Input } from 'antd';
 import styles from './Menu.module.less'
 import DropdownInput from "../DropdownInput";
-import { useDispatch } from 'react-redux';
-import {getUserInfo} from '../../util/auth'
-import {setFolder} from '../../store/current'
+import { useDispatch,useSelector } from 'react-redux';
+import { getUserInfo,setFileInfo } from '../../util/auth'
+import { setFolder } from '../../store/current'
 import { DashOutlined } from '@ant-design/icons'
 import file from '../../api/file';
 import _ from 'lodash';
@@ -21,12 +21,17 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   const type = props.type
 
   const username = JSON.parse(getUserInfo()!)
+  const tt = useSelector((state: any) => state.current)
 
   // 树数据
   const [treeData, setTreeData] = useState<any>()
   const refInput = useRef<any>(null);
   const [expandedKeys, setExpandedKeys] = useState<any[]>([]);
-  const [defaultKey, setDefaultKey] = useState<any[]>([]);
+
+  // 新建算法类
+  const [show,setShow] = useState(false)
+  const [algoVal,setAlgoVal] = useState("")
+  const [err,setErr] = useState(false)
 
   const dispatch = useDispatch();
 
@@ -37,56 +42,82 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
 
   // 处理传入的文件数据
   useEffect(() => {
-    const arr = data.reduce((acc, cur) => {
-      const existingType = acc.find(item => item.title === cur.algo_type);
-      if (existingType) {
-          existingType.children.push({
-             title: cur.folder_name,
-             key:cur.folder_name, 
-             id: cur.id,isLeaf: true,
-             propKey:cur.algo_type 
-            });
-      } else {
-          acc.push({ 
-            title: cur.algo_type, 
-            key: cur.algo_type,
-            selectable: false,
-            isInput: false, 
-            children: [{ 
-              title: cur.folder_name,
-              key:cur.folder_name, 
-              id: cur.id,
-              isLeaf: true,
-              propKey:cur.algo_type 
-            }] 
-          });
-      }
-      return acc;
-    }, []); 
-    arr[0].children[0].selected = true
+    console.log('shuaxin')
+    const arr = data.map((item: any) => {
+      return { title: item.algo_type, key: item.algo_type, id: item.id, selectable: false, isInput: false}
+    })
     setTreeData(arr)
-    // 自动展开第一项
-    // setExpandedKeys([arr[0].key])
-    // 自动展示第一项中的第一项
-    if(type==='list') {
-      // onSelect([arr[0].children[0].key],{selected:true,node:{key:arr[0].children[0].key,propKey:arr[0].key}})
-    }
-  
   }, [])
+
+  // 判断对象数组内是否存在key
+  const hasKey = (arr:any, key:string, showKey:boolean = false) => {
+    if(showKey){
+      return {
+        res:arr.some(item => item.key === key),
+        key:key
+      }
+    }
+    return arr.some(item => item.key === key)
+  }
+
+  // ============
+  // 创建新算法类
+  // ============
+  const addAlgo = async () => {
+    if(err){
+      info('请输入合法的文件夹名')
+    }// 判断是否已存在该文件夹名称
+    else if(hasKey(data,algoVal)){
+        info('该文件夹已存在')
+    }else{
+      const res = await file.saveAlgo({id:null,algotype:algoVal,username:username})
+      // 插入节点isInput为true，渲染节点的判断条件
+      const temp = {
+            title: algoVal,
+            id:res.data.insertId,
+            isInput: false,
+            key: algoVal,
+            selectable: false
+          };
+      setTreeData([temp, ...treeData]);
+      if(!expandedKeys?.includes(algoVal))
+      {
+        const expands = [algoVal, ...expandedKeys];
+        setExpandedKeys(expands);
+      }
+      setShow(false)
+      // 重新保存storage内的数据
+      file.list({username:username}).then((res: any) => {
+        setFileInfo(JSON.stringify(res.data))
+      })
+    }
+  }
+  // 监听输入报错 
+  const handleChange = _.debounce((e: any, isSure = false) => {
+    const { value } = e?.target;
+    const reg = /^[a-zA-Z0-9_\-\u4e00-\u9fa5]+$/;
+    if (!reg.test(value)) {
+      setErr(true);
+    } 
+    else {
+      setErr(false);
+    }
+  }, 300);
+
 
   // ============
   // 编辑节点
   // ============
   const editItem = (node: any) => {
-    const data = editTreeItem(treeData, node?.key);
-    setTreeData(data);
+    setTreeData(origin=>editTreeItem(origin, node?.key));
     setTimeout(() => refInput.current.focus(), 10);
   };
-  // 节点呈编辑状态
+  // 节点呈编辑状态:展示输入框、不可点击
   const editTreeItem: any = (tree: any, key: string) => {
     return _.map(tree, (item: any) => {
       if (item?.key === key) {
         item.isInput = true;
+        item.selectable = false;
         return item;
       } else if (item?.children) {
         return { ...item, children: editTreeItem(item?.children, key) };
@@ -122,20 +153,23 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   // ===========
   // 添加节点
   // ===========
-  const addItem = (node: any) => {
-    const len = node?.children?.length;
+  const addItem = async (node: any) => {
+    console.log(node)
+    // 获取数据库中文件夹的当前最大id
+    const len = await file.getFileID()
     // 插入节点isInput为true，渲染节点的判断条件
-    const newChild = [
+    const tempChild = [
         {
           isInput: true,
-          key: `${node?.key}_${len}`,
+          id: len.data+1,
           isAdd: true,
-          isLeaf:true
+          isLeaf:true,
+          selectable: false,
+          propKey:node.key
         },
         ...node.children,
       ];
-    const data = updateTreeData(treeData, node, newChild);
-    setTreeData(data);
+    setTreeData(origin=>updateTreeData(origin, node.key, tempChild));
     if(!expandedKeys?.includes(node?.key))
     {
       const expands = [node?.key, ...expandedKeys];
@@ -144,14 +178,14 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
     setTimeout(() => refInput.current.focus(), 10);
   };
   // 更新树数据
-  const updateTreeData = (tree: any, target: any, children: any) => {
+  const updateTreeData = (tree: any, key: any, children: any) => {
     return tree.map((node: any) => {
-      if (node.key === target.key) {
-        return { ...node, children };
+      if (node.key === key) {
+        return { ...node, children: children };
       } else if (node?.children) {
         return {
           ...node,
-          children: updateTreeData(node?.children, target, children),
+          children: updateTreeData(node?.children, key, children),
         };
       }
       return node;
@@ -162,68 +196,87 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   // 监听添加节点的输入
   // =====================
   const onEnter = (e: any, node: any) => {
+    console.log(e,node)
+    // 得到输入值
     const value = e?.target?.value;
-
-    if (!value) {
-      // 输入内容为空就回车，直接删除编辑框的节点
-      const dele = deleteNodeByKey(treeData, node?.key);
-      setTreeData(dele);
-      return;
-    }
-    // 如果和已有文件重名，不允许使用
-    const obj:any = {}
-    data.forEach(item => {
-        const { folder_name, algo_type,id } = item;
-        if (!obj[algo_type]) {
-            obj[algo_type] = [];
+      // 对新增节点或是编辑节点进行区分
+      if(node?.isAdd){
+        // 新增节点若输入值空，则删除
+        if (!value ) {
+          const dele = deleteNodeByKey(treeData, node?.key);
+          setTreeData(dele);
+          return;
         }
-        obj[algo_type].push(folder_name);
-    });
-    let items = {}
-    let temp = node.propKey
-    // 没有prop说明是从父节点击，说明是新增节点的onEnter
-    if(!node.propKey){
-      temp = node?.key.split('_')[0]
-      items = obj[temp]
-    }
-    else items = obj[node.propKey]
+        // 新增节点若重名，则提示（新增节点只会是叶子节点）
+        // 得到当前叶子的父节点
+        const tree = treeData.find((item: any) => item.key === node.propKey);
+        // 判断它的兄弟叶子
+        if(hasKey(tree.children,value)){
+          info('文件名不能重名');
+          return;
+        }
+      }else{
+        // 编辑节点若输入值空，则提示
+        if(!value) {
+          info('文件名不能为空');
+          return;
+        }
+        // 编辑节点若重名，则提示
+        // 先判断是不是根节点的编辑
+        if(node.isLeaf){
+          // 得到当前叶子的父节点
+          const tree = treeData.find((item: any) => item.key === node.propKey);
+          // 判断它的兄弟叶子，不和兄弟和重名但是和自己重名
+          if(hasKey(tree.children,value,true).res && hasKey(tree.children,value,true).key !== node.key){
+            info('文件名不能重名')
+            return;
+          }
+        }else{
+          if(hasKey(data,value)){
+            info('文件名不能重名');
+            return;
+          }
+        }
+      }
 
-    // 这里不能用forEach，因为forEach使用return无效。只会跳出当前循环
-for (const item of items) {
-  if (item === value && item !== node.key) {
-    info('文件名不能重名');
-    return;
-  }
-}
     // 有输入内容就更新
-      const data = updateItem(treeData, node?.key, value,temp);
-      setTreeData(data);
+      const tempData = updateItem(treeData, node, value);
+      setTreeData(tempData);
+      // 重新保存storage内的数据
+      file.list({username:username}).then((res: any) => {
+        setFileInfo(JSON.stringify(res.data))
+      })
   };
   // updateItem 
   // 根据key 找到正在输入的节点，将输入内容更新到title（显示节点的名字），并删除之前的isInput属性
-  const updateItem: any = ( tree: any, key: string, data: any,propKey:any) => {
-    return _.map(tree, async (item: any) => {
-      if (item?.key === key) {
-        item.title = data;
-        item.key = data
-        // 存在说明是新增节点
-        if(propKey) {
-          // item.propKey = propKey
-          // const response = await axios.post('http://localhost:3000/file/add',{
-          //   'foldername':key,
-          //   'username':"www",
-          //   'filename':propKey
-          // });
-        }else{
-          // const response = await axios.post('http://localhost:3000/file/add',{
-          //   'foldername':key,
-          //   'username':"www",
-          //   'filename':propKey
-          // });
+  const updateItem: any = ( tree: any, node: any, value: any) => {
+    return _.map(tree, (item: any) => {
+      
+      if (item?.key === node.key) {
+        // 如果是新增叶子
+        if(node.isAdd){
+          // 通过propKey找到树的id
+          const algoid = data.find(item=>item.algo_type === node.propKey).id
+          file.saveFolder({algoid:algoid,id:node.id,foldername:value})
         }
-        return _.omit(item, "isInput");
+        // 否则是编辑
+        else{
+          // 如果是编辑叶子
+          if(node.isLeaf){
+            // 通过propKey找到树的id
+            const algoid = data.find(item=>item.algo_type === node.propKey).id
+            file.saveFolder({algoid:algoid,id:node.id,foldername:value})
+          }
+          // 否则是编辑树
+          else{
+            file.saveAlgo({id:node.id,algotype:value,username:username})
+          }
+        }
+        item.title = value;
+        item.key = value;
+        return _.chain(item).omit("isInput","isAdd").set("selectable", true).value();
       } else if (item?.children) {
-        return { ...item, children: updateItem(item?.children, key, data,propKey) };
+        return { ...item, children: updateItem(item?.children, node, value) };
       }
       return item;
     });
@@ -252,74 +305,115 @@ for (const item of items) {
         <Dropdown overlay={() => (
           <Menu
             onClick={(e) => {
+            // 阻止冒泡，防止选择时展开或选中
+              e.domEvent.stopPropagation()
               if (e?.key === "add") addItem(node);
               if (e?.key === "edit") editItem(node);
               if (e?.key === "del") delItem(node);
             }}
           >
-            {
-              node.isLeaf
-                ?
-                <>
-                  <Menu.Item key="del">刪除</Menu.Item>
-                  <Menu.Item key="edit">编辑</Menu.Item>
-                </>
-                :
-                <Menu.Item key="add">新增</Menu.Item>
-            }
+              <Menu.Item key="del">刪除</Menu.Item>
+              <Menu.Item key="edit">编辑</Menu.Item>
+              {(node.children&&!node.isLeaf)?<Menu.Item key="add">新增</Menu.Item>:null}
           </Menu>
-        )} trigger={["click"]}>
+          )} 
+          trigger={["click"]}
+        >
           <Button shape="circle" size={"small"} onClick={(e) => e.stopPropagation()} icon={<DashOutlined />}></Button>
         </Dropdown>
       </span>
     );
   }
 
-
+  // 叶子节点选中事件
   const onSelect = async (keys,info) => {
-    const { key, propKey } = info.node
-    // 点击拿到文件内容，存入store，代码区读取store，渲染代码并且build
-     const res = await file.readFile({
-        'foldername':key,
-        'username':username,
-        'algotype':propKey
+    const { id } = info.node
+    if(id){
+      // 点击拿到文件内容，存入store，代码区读取store，渲染代码并且build
+      const res = await file.readFile({
+        'id':id
       })
-      dispatch(setFolder([res.data,res.id,type]))
+      dispatch(setFolder([res.data,id,type]))
+    }
+    else{
+      const res = await file.readPublic({
+        'algotype':info.node.propKey,
+        'foldername':keys[0]
+      })
+      dispatch(setFolder([res.data,type]))
+    }
+    
   };
-  const onSelect1 = async (keys,info) => {
-    const { key, propKey } = info.node
-    const res = await file.readPublic({
-      'foldername':key,
-      'algotype':propKey
-    })
-    dispatch(setFolder([res.data,res.id,type]))
-    console.log(res)
-  }
 
+  // 展开项
   const onExpand = (keys) => {
     setExpandedKeys(keys);
-    console.log(expandedKeys)
   };
+
+  // 点击树，异步记载叶子节点
+  const onLoad = ({key}:any) => 
+  new Promise<void>((resolve) => {
+    // 向后端获取子文件
+    let files:any = []
+    treeData.forEach(async item=>{
+      if(item.key === key){
+        let arr = []
+        if(type === 'list'){
+          if(!item.id) {resolve();return;}
+          const res = await file.readFolder({id:item.id})
+          files = res.data
+          arr = files.map((file: any) => {
+            return { title: file.folder_name, key: file.folder_name, id: file.id,propKey:item.key, isLeaf: true}
+          })
+        }
+        else{
+          const res = await file.readFolderPublic({foldername:item.key})
+          files = res.data
+          arr = files.map((file: any) => {
+            return { title: file.folder_name, key: file.folder_name, propKey:item.key,isLeaf: true}
+          })
+        }
+        setTreeData(origin=>updateTreeData(origin,key,arr))
+      }
+    })
+    resolve()
+  })
 
   return (
     <div className={styles.outer}>
       {
         type === 'list'
         ?
-        <DirectoryTree
-          defaultSelectedKeys = {defaultKey}
-          expandedKeys={expandedKeys}
-          onExpand={onExpand}
-          treeData={treeData}
-          onSelect={onSelect}
-          titleRender={titleRender}
-        />
+        <>
+          <Button onClick={()=>setShow(true)} style={{margin:'10px 67px'}}>add new algo</Button>
+          <Button onClick={()=>console.log(data)} style={{margin:'10px 67px'}}>test</Button>
+          <Modal title="请输入文件夹名称" open={show} onOk={addAlgo} onCancel={()=>setShow(false)}>
+            <Input 
+              value={algoVal}
+              onChange={(e) => {
+                  e?.persist();
+                  setAlgoVal(e?.target?.value);
+                  handleChange(e);
+              }}
+              style={{ borderColor: err ? "red" : "" }}
+            />
+          </Modal>
+          <DirectoryTree
+            expandedKeys={expandedKeys}
+            onExpand={onExpand}
+            treeData={treeData}
+            onSelect={onSelect}
+            loadData={onLoad}
+            titleRender={titleRender}
+          />
+        </>
         :
         <DirectoryTree
           treeData={treeData}
           expandedKeys={expandedKeys}
           onExpand={onExpand}
-          onSelect={onSelect1}
+          onSelect={onSelect}
+          loadData={onLoad}
         />
       }
     </div>

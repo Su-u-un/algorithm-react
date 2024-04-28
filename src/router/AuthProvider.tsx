@@ -3,7 +3,7 @@
 // 第三方库
 import React from "react";
 import { message } from "antd";
-import { ReactElement, useEffect } from "react";
+import {  useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Auth from "../pages/Auth";
 
