@@ -27,16 +27,16 @@ const BasicLayout: React.FC = () => {
           <Sider/>
         </Pane>
         <Pane>
-        <Layout style={{ minHeight: '100vh'}}>
-          <Header/>
-          {
-            show
-            ?
-            <Content/>
-            :
-            <div>教程说明页</div>
-          }
-        </Layout>
+          <Layout style={{ minHeight: '100vh'}}>
+            <Header/>
+            {
+              show
+              ?
+              <Content/>
+              :
+              <div>教程说明页</div>
+            }
+          </Layout>
         </Pane>
       </SplitPane>
     </div>

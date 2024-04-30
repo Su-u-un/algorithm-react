@@ -196,7 +196,6 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   // 监听添加节点的输入
   // =====================
   const onEnter = (e: any, node: any) => {
-    console.log(e,node)
     // 得到输入值
     const value = e?.target?.value;
       // 对新增节点或是编辑节点进行区分
@@ -386,7 +385,6 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
         ?
         <>
           <Button onClick={()=>setShow(true)} style={{margin:'10px 67px'}}>add new algo</Button>
-          <Button onClick={()=>console.log(data)} style={{margin:'10px 67px'}}>test</Button>
           <Modal title="请输入文件夹名称" open={show} onOk={addAlgo} onCancel={()=>setShow(false)}>
             <Input 
               value={algoVal}

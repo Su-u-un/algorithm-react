@@ -1,8 +1,8 @@
 import React from 'react';
 import  ResizableContainer from '../components/ResizableContainer';
 import { HorizontalLayout } from './index';
-import {SplitPane} from 'react-split-pane';
-import './temp.css'
+import {SplitPane,Pane} from 'react-split-pane';
+import styles from './Layouts.module.less'
 
 class Layout {
   key: string;
@@ -46,11 +46,9 @@ class Layout {
   }
 
   render() {
-    const horizontal = this instanceof HorizontalLayout;
-
     return(
       <SplitPane split='horizontal' >
-        {this.children.map(tracer => tracer && tracer.render())}
+        {this.children.map(tracer => <Pane className={styles.pane} initialSize='33.3%'>{tracer && tracer.render()}</Pane>)}
       </SplitPane>
           
     )

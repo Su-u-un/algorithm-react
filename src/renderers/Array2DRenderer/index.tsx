@@ -7,7 +7,7 @@ class Array2DRenderer extends Renderer {
   constructor(props) {
     super(props);
 
-    this.togglePan(true);
+    this.togglePan(false);
     this.toggleZoom(true);
   }
 

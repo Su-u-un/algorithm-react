@@ -35,7 +35,7 @@ class ChartRenderer extends Array1DRenderer {
 
     return (
       <ReactECharts
-      option={temp} style={{ height: 400,width:500 }}
+      option={temp} style={{ height: '100%',width:'100%'}}
       opts={{ renderer: 'svg' }}
     />
     );

@@ -2,28 +2,18 @@ import React, { useEffect, useState, useRef,useLayoutEffect } from 'react';
 import * as TracerClasses from '../../tracers';
 import * as LayoutClasses from '../../layouts';
 import { useSelector,useDispatch } from 'react-redux';
-import { setBuilding } from '../../store/current';
 
 
 const Charts = () => {
     const [val, setVal] = useState(null)
     let objects = {}
     const {chunks,cursor} = useSelector((state: any) => state.player);
-    const {building} = useSelector(state => state.current)
 
-    const dispatch = useDispatch()
 
     useEffect(() => {
         update(chunks, cursor);
         // 接受新的state
       }, [cursor]);
-
-    //   useEffect(() => {
-    //     if( building === true ) update(chunks, cursor);
-    //     return () => {
-    //         dispatch(setBuilding(false))
-    //     }
-    //   },[building])
 
     const reset = ()=>{
         setVal(null)
@@ -72,7 +62,7 @@ const Charts = () => {
 
 
     return (
-        <div style={{height:'100%'}}>
+        <div style={{height:'calc(100vh - 87px)'}}>
             {val && val.render()}
         </div>
     )

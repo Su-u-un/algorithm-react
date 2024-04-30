@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState, useCallback, useLayoutEffect } from "react";
 import styles from './Code.module.less'
 import { debounce, cloneDeep, merge } from 'lodash';
-import { Tabs, Button } from 'antd';
+import { Tabs, Button, Input } from 'antd';
 import file from '../../api/file'
 import { useDispatch, useSelector } from "react-redux";
 import { setChunks, setCursor, setLineIndicator } from "../../store/play";
 import { setBuilding } from "../../store/current"
 import Editor from "../Editor";
+import DropdownInput from "../DropdownInput";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
@@ -16,6 +17,10 @@ const Code: React.FC = () => {
   const [activeKey, setActiveKey] = useState('');
   const [items, setItems] = useState([]);
   const [activeText, setActiveText] = useState('')
+  // 控制修改框的显示隐藏
+  const [edit, setEdit] = useState(false)
+
+  let count = 0
 
   useEffect(() => {
     if (files.length) {
@@ -23,8 +28,7 @@ const Code: React.FC = () => {
         return {
           label: file.name,
           children: Editor({ data: file.content, onChange: (e: any) => handleChange(e) }),
-          key: file.name,
-          closable: false
+          key: file.name
         }
       })
       setActiveKey(initialItems[0].key)
@@ -37,9 +41,46 @@ const Code: React.FC = () => {
     if (items.length) build()
   }, [items])
 
+  // const titleRender=(file,tag)=>{
+  //   if(!tag) return(
+  //     <div onClick={()=>{
+  //       count += 1;
+  //       setTimeout(() => {
+  //         if (count === 1) {
+  //           console.log('single click: ', count);
+  //         } else if (count === 2) {
+  //           console.log('db click: ', count);
+  //           setEdit(true)
+  //         }
+  //         count = 0;
+  //       }, 300);
+  //     }}>
+  //       {file.name}
+  //     </div>
+  //   )
+  //   else return (
+  //     <DropdownInput
+  //       initValue={file.name}
+  //       onPressEnter={(e) => onEnter(e, file)}
+  //       onBlur={(e) => onEnter(e, file)}
+  //     />
+  //   )
+  // }
+  // const renderTabBar=(props, DefaultTabBar)=>{
+  //   console.log('new a')
+  //   return (
+  //   <DefaultTabBar {...props} />
+  //   )
+  // }
+
+  // const onEnter = (e,file)=>{
+  //   console.log(e,file)
+  //   setEdit(false)
+  // }
+
   const handleChange = useCallback(
     data => setActiveText(data)
-  ,[])
+    , [])
 
   const newTabIndex = useRef(0);
 
@@ -52,38 +93,42 @@ const Code: React.FC = () => {
   async function build() {
     // 通知进度条置1
     dispatch(setBuilding(true))
+
+    // 查找当前active的文件的真实地址，发给后端，后端读取本地文件进行构建。
+    const temp = files.find((file) => file.name === activeKey)
+    // 如果没有url，说明是新建文件，不做处理
+    if(!temp) return
+
     // 判断是用户文件还是公共文件，如果是用户文件就保存再构建，如果公共文件直接发送构建
-      if(type ==='list'){
-        // 保存当前
-        save()
-        // 重置chart
-        reset();
-        try {
-          // 查找当前active的文件的真实地址，发给后端，后端读取本地文件进行构建。
-          const realurl = files.find((file) => file.name === activeKey).realurl
-          const response = await file.build({
-            'url': realurl,
-            'content': activeText
-          });
-          const commands = response.data
-          reset(commands);
-          dispatch(setCursor(1))
-        } catch (error) {
-          console.error(error);
-        }
-  }
-    else{
-      try{
+    if (type === 'list') {
+      // 保存当前
+      save()
+      // 重置chart
       reset();
-      const response = await file.build({
-        'content': activeText
-      });
-      const commands = response.data
-      reset(commands);
-      dispatch(setCursor(1))
-    }catch(error){
-      console.error(error);
+      try {
+        const response = await file.build({
+          'url': temp.realurl,
+          'content': activeText
+        });
+        const commands = response.data
+        reset(commands);
+        dispatch(setCursor(1))
+      } catch (error) {
+        console.error(error);
+      }
     }
+    else {
+      try {
+        reset();
+        const response = await file.build({
+          'content': activeText
+        });
+        const commands = response.data
+        reset(commands);
+        dispatch(setCursor(1))
+      } catch (error) {
+        console.error(error);
+      }
     }
   };
 
@@ -146,6 +191,7 @@ const Code: React.FC = () => {
       children: Editor({ data: '', onChange: (e: any) => handleChange(e) }),
       key: newActiveKey
     });
+    console.log(newPanes, newActiveKey)
     setItems(newPanes);
     setActiveKey(newActiveKey);
   };
@@ -196,8 +242,8 @@ const Code: React.FC = () => {
       onEdit={onEdit}
       items={items}
       style={{ height: '100%', width: '100%' }}
-    >
-    </Tabs>
+      onTabClick={()=>{console.log('click '+activeKey)}}
+    />
   )
 }
 

@@ -13,13 +13,14 @@ import _ from "lodash";
 interface DropdownInputType extends InputProps {
   errorInfo?: string;
   initValue?: string;
+  placement?: any;
 }
 
 const DropdownInputFun: React.ForwardRefRenderFunction<
   unknown,
   DropdownInputType
 > = (props, ref) => {
-  const { errorInfo, initValue, onChange, onBlur, onPressEnter } = props;
+  const { errorInfo, initValue, placement, onChange, onBlur, onPressEnter } = props;
   // 判断是否弹出错误
   const [open, setOpen] = useState<boolean>(false);
   const [errorText, setErrorText] = useState<string>("请输入中英文数字及下划线横线");
@@ -67,6 +68,7 @@ const DropdownInputFun: React.ForwardRefRenderFunction<
           {errorText}
         </div>
       }
+      placement={props.placement?props.placement:'bottomLeft'}
       open={open}
     >
             <Input
