@@ -1,34 +1,71 @@
 import React, { useEffect, useRef, useState, useCallback, useLayoutEffect } from "react";
 import styles from './Code.module.less'
 import { debounce, cloneDeep, merge } from 'lodash';
-import { Tabs, Button, Input } from 'antd';
+import { Tabs, Button, Input, Dropdown,Modal,Menu } from 'antd';
 import file from '../../api/file'
 import { useDispatch, useSelector } from "react-redux";
 import { setChunks, setCursor, setLineIndicator } from "../../store/play";
 import { setBuilding } from "../../store/current"
 import Editor from "../Editor";
 import DropdownInput from "../DropdownInput";
+import MoadlInput from "../MoadlInput";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
 const Code: React.FC = () => {
+  const {confirm} = Modal
   const { files, folder_id, type } = useSelector(state => state.current)
 
   const [activeKey, setActiveKey] = useState('');
   const [items, setItems] = useState([]);
   const [activeText, setActiveText] = useState('')
-  // 控制修改框的显示隐藏
-  const [edit, setEdit] = useState(false)
 
-  let count = 0
+  const menu = (
+    <Menu>
+      <Menu.Item onClick={(e) => menuClick(e,'edit')}>修改名称</Menu.Item>
+      <Menu.Item onClick={(e) => menuClick(e,'delete')}>删除</Menu.Item>
+    </Menu>
+  )
+
+  const menuClick = (e,key) => {
+    console.log('拿不到父亲的state，能拿到redux的',files,items)
+    e.domEvent.stopPropagation()
+    if(key === 'edit') {
+      confirm({
+        title:'',
+        content:<Input/>,
+        okText:'确认',
+        cancelText:'取消',
+        onOk:()=>{
+          console.log('修改'+activeKey);
+        }
+      });
+    }
+    else if(key === 'delete') {
+      confirm({
+        title:'',
+        content:'确认删除吗?',
+        okText:'确认',
+        cancelText:'取消',
+        onOk:()=>{
+          console.log('删除'+activeKey);
+        }
+      });
+    }
+  }
 
   useEffect(() => {
     if (files.length) {
       const initialItems = files.map((file: any) => {
         return {
-          label: file.name,
+          label:  
+          <Dropdown overlay={menu} trigger={["contextMenu"]}>
+            <div>{file.name}</div>
+          </Dropdown>,
           children: Editor({ data: file.content, onChange: (e: any) => handleChange(e) }),
-          key: file.name
+          key: file.name,
+          realurl:file.realurl,
+          closable:false
         }
       })
       setActiveKey(initialItems[0].key)
@@ -40,43 +77,6 @@ const Code: React.FC = () => {
   useEffect(() => {
     if (items.length) build()
   }, [items])
-
-  // const titleRender=(file,tag)=>{
-  //   if(!tag) return(
-  //     <div onClick={()=>{
-  //       count += 1;
-  //       setTimeout(() => {
-  //         if (count === 1) {
-  //           console.log('single click: ', count);
-  //         } else if (count === 2) {
-  //           console.log('db click: ', count);
-  //           setEdit(true)
-  //         }
-  //         count = 0;
-  //       }, 300);
-  //     }}>
-  //       {file.name}
-  //     </div>
-  //   )
-  //   else return (
-  //     <DropdownInput
-  //       initValue={file.name}
-  //       onPressEnter={(e) => onEnter(e, file)}
-  //       onBlur={(e) => onEnter(e, file)}
-  //     />
-  //   )
-  // }
-  // const renderTabBar=(props, DefaultTabBar)=>{
-  //   console.log('new a')
-  //   return (
-  //   <DefaultTabBar {...props} />
-  //   )
-  // }
-
-  // const onEnter = (e,file)=>{
-  //   console.log(e,file)
-  //   setEdit(false)
-  // }
 
   const handleChange = useCallback(
     data => setActiveText(data)
@@ -91,9 +91,10 @@ const Code: React.FC = () => {
 
   // 点击后把代码发送到服务器，接收返回的命令集
   async function build() {
+    // 如果不是合法文件不进行构建
+    if(activeKey.split('.')[activeKey.split('.').length-1] === 'md') return
     // 通知进度条置1
     dispatch(setBuilding(true))
-
     // 查找当前active的文件的真实地址，发给后端，后端读取本地文件进行构建。
     const temp = files.find((file) => file.name === activeKey)
     // 如果没有url，说明是新建文件，不做处理
@@ -189,7 +190,8 @@ const Code: React.FC = () => {
     newPanes.push({
       label: newActiveKey + '.js',
       children: Editor({ data: '', onChange: (e: any) => handleChange(e) }),
-      key: newActiveKey
+      key: newActiveKey,
+      closable: false,
     });
     console.log(newPanes, newActiveKey)
     setItems(newPanes);
@@ -202,6 +204,7 @@ const Code: React.FC = () => {
     let lastIndex = -1;
     items.forEach((item, i) => {
       if (item.key === targetKey) {
+        console.log(item)
         lastIndex = i - 1;
       }
     });

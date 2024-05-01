@@ -91,5 +91,5 @@ const DropdownInputFun: React.ForwardRefRenderFunction<
     </Dropdown>
   );
 };
-const DropdownInput = forwardRef(DropdownInputFun);
-export default DropdownInput;
+
+export default forwardRef(DropdownInputFun);

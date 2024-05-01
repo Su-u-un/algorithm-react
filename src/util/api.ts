@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getToken } from './auth'
+import { getToken,delFileInfo,delToken,delUserInfo } from './auth'
 
 // 超时时间
 axios.defaults.timeout = 100000
@@ -33,10 +33,12 @@ axios.interceptors.response.use(res => {
    // 请求超时
   if (error.code === "ERR_NETWORK") {
     alert(error.message)
-  }else if (error.response.status === 408 || error.response.status === 401) { // 需要重新登录
-    alert(error.response.data.mes)
-  } else if (error.response.status === 403) { // 请求被拒绝
-    alert('403 请求被拒绝' + ': ' + error.response.data.error,)
+  }else if (error.response.status === 403 || error.response.status === 401) { // 需要重新登录
+    alert(error.response.data.error)
+    delToken()
+    delUserInfo()
+    delFileInfo()
+    window.location.href = '/Auth'
   } else if (error.response.status === 404) { // 路径找不到
     alert('404 路径找不到' + ': ' + error.response.data.error)
   } else if (error.response.status === 503) {

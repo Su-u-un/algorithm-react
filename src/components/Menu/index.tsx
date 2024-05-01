@@ -16,6 +16,7 @@ interface MenuProps {
 }
 
 const BaseMenu: React.FC<MenuProps> = (props) => {
+  const {confirm} = Modal;
   // 目录数据
   const data = props.data
   const type = props.type
@@ -42,7 +43,6 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
 
   // 处理传入的文件数据
   useEffect(() => {
-    console.log('shuaxin')
     const arr = data.map((item: any) => {
       return { title: item.algo_type, key: item.algo_type, id: item.id, selectable: false, isInput: false}
     })
@@ -130,13 +130,27 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   // 删除节点
   // ===============
   const delItem = (node: any) => {
-    const data = deleteNodeByKey(treeData, node?.key);
-    setTreeData(data);
+    confirm({
+      title:'',
+      content:'确认删除吗?',
+      okText:'确认',
+      cancelText:'取消',
+      onOk:()=>{
+        setTreeData(deleteNodeByKey(treeData, node?.key));
+      }
+    });
   }
   // 删除数据内节点并返回
   const deleteNodeByKey: any = (treeData: any, keyToDelete: string) => {
     return _.map(treeData, (node) => {
       if (node.key === keyToDelete) {
+        // 数据库操作删除
+        // 判断是不是树节点，进行不同的删除
+        if(node.isLeaf){
+          file.deleteFolder({id:node.id})
+        }else{
+          file.deleteAlgo({id:node.id})
+        }
         // 如果节点的key匹配要删除的key，则返回undefined，表示不包括该节点
         return undefined;
       } else if (node.children) {
@@ -154,7 +168,6 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   // 添加节点
   // ===========
   const addItem = async (node: any) => {
-    console.log(node)
     // 获取数据库中文件夹的当前最大id
     const len = await file.getFileID()
     // 插入节点isInput为true，渲染节点的判断条件
@@ -202,8 +215,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
       if(node?.isAdd){
         // 新增节点若输入值空，则删除
         if (!value ) {
-          const dele = deleteNodeByKey(treeData, node?.key);
-          setTreeData(dele);
+          setTreeData(deleteNodeByKey(treeData, node?.key));
           return;
         }
         // 新增节点若重名，则提示（新增节点只会是叶子节点）
@@ -239,8 +251,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
       }
 
     // 有输入内容就更新
-      const tempData = updateItem(treeData, node, value);
-      setTreeData(tempData);
+      setTreeData(updateItem(treeData, node, value));
       // 重新保存storage内的数据
       file.list({username:username}).then((res: any) => {
         setFileInfo(JSON.stringify(res.data))

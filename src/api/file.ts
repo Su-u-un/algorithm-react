@@ -32,8 +32,14 @@ export default {
             params: data
         })  
     },
-    // === 删除 ===
-    
+    // === 删除folder ===
+    deleteFolder:(data)=>{
+        return request({
+            url: '/file/deleteFolder',
+            method: 'get',
+            params: data
+        })
+    },
     // === 获取文件 ===
     readFile: (data) => {
         return request({
@@ -73,6 +79,14 @@ export default {
                 "algotype":algotype,
                 "username":username,
             }
+        })
+    },
+    // 删除Algo
+    deleteAlgo:(data) => {
+        return request({
+            url: '/file/deleteAlgo',
+            method: 'get',
+            params: data
         })
     },
     list:(data) => {
