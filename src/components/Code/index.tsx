@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState, useCallback, useLayoutEffect } from "react";
 import styles from './Code.module.less'
 import { debounce, cloneDeep, merge } from 'lodash';
-import { Tabs, Button, Input, Dropdown,Modal,Menu } from 'antd';
+import { Tabs, Button, Input, Dropdown,Modal,Menu,message } from 'antd';
 import file from '../../api/file'
 import { useDispatch, useSelector } from "react-redux";
 import { setChunks, setCursor, setLineIndicator } from "../../store/play";
-import { setBuilding } from "../../store/current"
+import { setBuilding,setFolder } from "../../store/current"
 import Editor from "../Editor";
 import DropdownInput from "../DropdownInput";
 import MoadlInput from "../MoadlInput";
@@ -13,6 +13,12 @@ import MoadlInput from "../MoadlInput";
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
 const Code: React.FC = () => {
+  const dispatch = useDispatch()
+    // 发出通知
+    const info = (mes) => {
+      message.info(mes);
+    };
+
   const {confirm} = Modal
   const { files, folder_id, type } = useSelector(state => state.current)
 
@@ -20,35 +26,40 @@ const Code: React.FC = () => {
   const [items, setItems] = useState([]);
   const [activeText, setActiveText] = useState('')
 
-  const menu = (
+  const menu = (props) => (
     <Menu>
-      <Menu.Item onClick={(e) => menuClick(e,'edit')}>修改名称</Menu.Item>
-      <Menu.Item onClick={(e) => menuClick(e,'delete')}>删除</Menu.Item>
+      <Menu.Item onClick={() => menuClick('edit',props.value)}>修改名称</Menu.Item>
     </Menu>
   )
 
-  const menuClick = (e,key) => {
-    console.log('拿不到父亲的state，能拿到redux的',files,items)
-    e.domEvent.stopPropagation()
+  const menuClick = (key,value) => {
     if(key === 'edit') {
+      let tempName = ''
       confirm({
-        title:'',
-        content:<Input/>,
+        title:'修改名称',
+        content:<Input defaultValue={value} onChange={(e)=>{ tempName = e.target.value}} />,
         okText:'确认',
         cancelText:'取消',
         onOk:()=>{
-          console.log('修改'+activeKey);
-        }
-      });
-    }
-    else if(key === 'delete') {
-      confirm({
-        title:'',
-        content:'确认删除吗?',
-        okText:'确认',
-        cancelText:'取消',
-        onOk:()=>{
-          console.log('删除'+activeKey);
+          const reg = /^[a-zA-Z0-9_.\-\u4e00-\u9fa5]+$/;
+          if (!tempName) {
+            info('修改失败，名称不能为空');
+          }else if (!reg.test(tempName)) {
+            info('请输入大小写字母、数字、中文、_、-');
+          } else {
+            const temp = cloneDeep(files);
+            temp[0].name = tempName;
+            dispatch(setFolder([temp, folder_id, type]));
+            console.log(temp)
+            const ada = files.find((file) => file.name === activeKey)
+            const realurl = ada ? ada.realurl : ''
+            console.log({
+              "filename": activeKey,
+              "content": activeText,
+              "realurl": realurl,
+              "folderid": folder_id
+          })
+          }
         }
       });
     }
@@ -58,19 +69,27 @@ const Code: React.FC = () => {
     if (files.length) {
       const initialItems = files.map((file: any) => {
         return {
-          label:  
-          <Dropdown overlay={menu} trigger={["contextMenu"]}>
-            <div>{file.name}</div>
-          </Dropdown>,
+          label:
+            type === 'list'
+            ?
+            <Dropdown overlay={menu({value:file.name})} trigger={["contextMenu"]}>
+              <div>{file.name}</div>
+            </Dropdown>
+            :
+            file.name,
           children: Editor({ data: file.content, onChange: (e: any) => handleChange(e) }),
           key: file.name,
-          realurl:file.realurl,
-          closable:false
+          realurl:file.realurl
         }
       })
       setActiveKey(initialItems[0].key)
       setActiveText(initialItems[0].children.props.value)
       setItems(initialItems)
+    }
+    else{
+      setActiveKey('')
+      setActiveText('')
+      setItems([])
     }
   }, [files])
 
@@ -84,21 +103,18 @@ const Code: React.FC = () => {
 
   const newTabIndex = useRef(0);
 
-  const button = { left: <Button style={{ marginLeft: 8 }} onClick={build}>Build</Button>, right: <Button onClick={save}>Save</Button> }
-
-  const dispatch = useDispatch()
-
+  const button = { left: <Button style={{ marginLeft: 8 }} onClick={build}>Build</Button>, right: <Button disabled={type === 'public'} onClick={save}>Save</Button> }
 
   // 点击后把代码发送到服务器，接收返回的命令集
   async function build() {
     // 如果不是合法文件不进行构建
-    if(activeKey.split('.')[activeKey.split('.').length-1] === 'md') return
+    if(activeKey.split('.')[activeKey.split('.').length-1] !== 'js') return
     // 通知进度条置1
     dispatch(setBuilding(true))
     // 查找当前active的文件的真实地址，发给后端，后端读取本地文件进行构建。
     const temp = files.find((file) => file.name === activeKey)
     // 如果没有url，说明是新建文件，不做处理
-    if(!temp) return
+    if(!temp || !temp.realurl) return
 
     // 判断是用户文件还是公共文件，如果是用户文件就保存再构建，如果公共文件直接发送构建
     if (type === 'list') {
@@ -112,8 +128,15 @@ const Code: React.FC = () => {
           'content': activeText
         });
         const commands = response.data
-        reset(commands);
-        dispatch(setCursor(1))
+        if(commands === 'err') info('构建失败，请检查代码格式是否正确')
+        else if(commands.constructor  !== Array) {
+          eval(commands)
+        }
+        else{
+          reset(commands);
+          dispatch(setCursor(1))
+        }
+        
       } catch (error) {
         console.error(error);
       }
@@ -185,26 +208,35 @@ const Code: React.FC = () => {
     // tab key 删除的时候用
     const newActiveKey = `new${newTabIndex.current++}`;
     // tab pane 所有tab的数组
-    // const test = cloneDeep(inittest);
     const newPanes: any = cloneDeep(items);
     newPanes.push({
       label: newActiveKey + '.js',
       children: Editor({ data: '', onChange: (e: any) => handleChange(e) }),
-      key: newActiveKey,
-      closable: false,
+      key: newActiveKey
     });
-    console.log(newPanes, newActiveKey)
+    const temp = cloneDeep(files);
+    temp.push({
+      name: newActiveKey + '.js',
+      content: '',
+      realurl: ''
+    })
+    dispatch(setFolder([temp, folder_id, type]));
     setItems(newPanes);
     setActiveKey(newActiveKey);
   };
 
   // 删除tab
   const remove = (targetKey: TargetKey) => {
-    let newActiveKey = activeKey;
+    confirm({
+      title:'删除',
+      content:'确认删除吗?',
+      okText:'确认',
+      cancelText:'取消',
+      onOk:()=>{
+        let newActiveKey = activeKey;
     let lastIndex = -1;
     items.forEach((item, i) => {
       if (item.key === targetKey) {
-        console.log(item)
         lastIndex = i - 1;
       }
     });
@@ -220,6 +252,12 @@ const Code: React.FC = () => {
     }
     setItems(newPanes);
     setActiveKey(newActiveKey);
+        // 找到删除文件的realurl，发送后端
+        const temp = files.find((file) => file.name === targetKey)
+        file.delete({realurl:temp.realurl})
+      }
+    });
+    
   };
 
   // 监听tab变化，targetKey如果add是click event
@@ -237,6 +275,7 @@ const Code: React.FC = () => {
 
   return (
     <Tabs
+      hideAdd={type === 'public' ? true : false}
       centered={true}
       tabBarExtraContent={button}
       type="editable-card"
@@ -245,7 +284,6 @@ const Code: React.FC = () => {
       onEdit={onEdit}
       items={items}
       style={{ height: '100%', width: '100%' }}
-      onTabClick={()=>{console.log('click '+activeKey)}}
     />
   )
 }

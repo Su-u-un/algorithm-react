@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Tree, Button, Dropdown, Menu, message, Modal,Input } from 'antd';
+import { Tree, Button, Dropdown, Menu, message, Modal,Input, Divider } from 'antd';
 import styles from './Menu.module.less'
 import DropdownInput from "../DropdownInput";
 import { useDispatch,useSelector } from 'react-redux';
@@ -22,7 +22,6 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   const type = props.type
 
   const username = JSON.parse(getUserInfo()!)
-  const tt = useSelector((state: any) => state.current)
 
   // 树数据
   const [treeData, setTreeData] = useState<any>()
@@ -65,7 +64,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   // ============
   const addAlgo = async () => {
     if(err){
-      info('请输入合法的文件夹名')
+      info('请输入大小写字母、数字、中文、_、-');
     }// 判断是否已存在该文件夹名称
     else if(hasKey(data,algoVal)){
         info('该文件夹已存在')
@@ -150,6 +149,13 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
           file.deleteFolder({id:node.id})
         }else{
           file.deleteAlgo({id:node.id})
+          // localStorage内修改
+          // const arr = data.filter((item: any) => item.algo_type !== node.key)
+          // setFileInfo(JSON.stringify(arr))
+          // 重新保存storage内的数据
+          file.list({username:username}).then((res: any) => {
+            setFileInfo(JSON.stringify(res.data))
+          })
         }
         // 如果节点的key匹配要删除的key，则返回undefined，表示不包括该节点
         return undefined;
@@ -169,7 +175,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   // ===========
   const addItem = async (node: any) => {
     // 获取数据库中文件夹的当前最大id
-    const len = await file.getFileID()
+    const len = await file.getFolderID()
     // 插入节点isInput为true，渲染节点的判断条件
     const tempChild = [
         {
@@ -261,11 +267,11 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   // 根据key 找到正在输入的节点，将输入内容更新到title（显示节点的名字），并删除之前的isInput属性
   const updateItem: any = ( tree: any, node: any, value: any) => {
     return _.map(tree, (item: any) => {
-      
       if (item?.key === node.key) {
         // 如果是新增叶子
         if(node.isAdd){
           // 通过propKey找到树的id
+          console.log(data)
           const algoid = data.find(item=>item.algo_type === node.propKey).id
           file.saveFolder({algoid:algoid,id:node.id,foldername:value})
         }
@@ -312,6 +318,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
         className="titleRoot"
       >
         <span>{title}</span>
+        <Divider type="vertical"/>
         <Dropdown overlay={() => (
           <Menu
             onClick={(e) => {
@@ -350,7 +357,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
         'algotype':info.node.propKey,
         'foldername':keys[0]
       })
-      dispatch(setFolder([res.data,type]))
+      dispatch(setFolder([res.data,'',type]))
     }
     
   };
@@ -362,30 +369,27 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
 
   // 点击树，异步记载叶子节点
   const onLoad = ({key}:any) => 
-  new Promise<void>((resolve) => {
+  new Promise<void>(async (resolve) => {
     // 向后端获取子文件
-    let files:any = []
-    treeData.forEach(async item=>{
-      if(item.key === key){
-        let arr = []
-        if(type === 'list'){
-          if(!item.id) {resolve();return;}
-          const res = await file.readFolder({id:item.id})
-          files = res.data
-          arr = files.map((file: any) => {
-            return { title: file.folder_name, key: file.folder_name, id: file.id,propKey:item.key, isLeaf: true}
-          })
-        }
-        else{
-          const res = await file.readFolderPublic({foldername:item.key})
-          files = res.data
-          arr = files.map((file: any) => {
-            return { title: file.folder_name, key: file.folder_name, propKey:item.key,isLeaf: true}
-          })
-        }
-        setTreeData(origin=>updateTreeData(origin,key,arr))
+    const tree = treeData.find((item: any) => item.key === key);
+    let arr = []
+    if(type === 'list'){
+      if(!tree.id) {
+        resolve();
+        return;
       }
-    })
+      const res = await file.readFolder({id:tree.id})
+      arr = res.data.map((file: any) => {
+        return { title: file.folder_name, key: file.folder_name, id: file.id,propKey:tree.key, isLeaf: true}
+      })
+    }
+    else{
+      const res = await file.readFolderPublic({foldername:tree.key})
+      arr = res.data.map((file: any) => {
+        return { title: file.folder_name, key: file.folder_name, propKey:tree.key,isLeaf: true}
+      })
+    }
+    setTreeData(origin=>updateTreeData(origin,key,arr))
     resolve()
   })
 

@@ -10,7 +10,7 @@ interface CurrentState{
 const initialState:CurrentState = {
     files:[],
     folder_id:0,
-    type:'list',
+    type:'',
     building:false
 }
 

@@ -10,9 +10,15 @@ dependencies:
   '@codemirror/lang-javascript':
     specifier: ^6.2.1
     version: registry.npmmirror.com/@codemirror/lang-javascript@6.2.1
+  '@loadable/component':
+    specifier: ^5.16.4
+    version: registry.npmmirror.com/@loadable/component@5.16.4(react@18.2.0)
   '@reduxjs/toolkit':
     specifier: ^1.9.5
     version: registry.npmmirror.com/@reduxjs/toolkit@1.9.5(react-redux@8.1.2)(react@18.2.0)
+  '@types/loadable__component':
+    specifier: ^5.13.9
+    version: registry.npmmirror.com/@types/loadable__component@5.13.9
   '@types/lodash':
     specifier: ^4.17.0
     version: registry.npmmirror.com/@types/lodash@4.17.0
@@ -2054,6 +2060,21 @@ packages:
       '@lezer/common': registry.npmmirror.com/@lezer/common@1.0.4
     dev: false
 
+  registry.npmmirror.com/@loadable/component@5.16.4(react@18.2.0):
+    resolution: {integrity: sha512-fJWxx9b5WHX90QKmizo9B+es2so8DnBthI1mbflwCoOyvzEwxiZ/SVDCTtXEnHG72/kGBdzr297SSIekYtzSOQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@loadable/component/-/component-5.16.4.tgz}
+    id: registry.npmmirror.com/@loadable/component/5.16.4
+    name: '@loadable/component'
+    version: 5.16.4
+    engines: {node: '>=8'}
+    peerDependencies:
+      react: ^16.3.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      '@babel/runtime': registry.npmmirror.com/@babel/runtime@7.22.15
+      hoist-non-react-statics: registry.npmmirror.com/hoist-non-react-statics@3.3.2
+      react: registry.npmmirror.com/react@18.2.0
+      react-is: registry.npmmirror.com/react-is@16.13.1
+    dev: false
+
   registry.npmmirror.com/@nodelib/fs.scandir@2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz}
     name: '@nodelib/fs.scandir'
@@ -2377,6 +2398,14 @@ packages:
     name: '@types/json-schema'
     version: 7.0.12
     dev: true
+
+  registry.npmmirror.com/@types/loadable__component@5.13.9:
+    resolution: {integrity: sha512-QWOtIkwZqHNdQj3nixQ8oyihQiTMKZLk/DNuvNxMSbTfxf47w+kqcbnxlUeBgAxdOtW0Dh48dTAIp83iJKtnrQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/loadable__component/-/loadable__component-5.13.9.tgz}
+    name: '@types/loadable__component'
+    version: 5.13.9
+    dependencies:
+      '@types/react': registry.npmmirror.com/@types/react@18.2.21
+    dev: false
 
   registry.npmmirror.com/@types/lodash@4.17.0:
     resolution: {integrity: sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/lodash/-/lodash-4.17.0.tgz}

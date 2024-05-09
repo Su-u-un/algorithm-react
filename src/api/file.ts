@@ -9,6 +9,13 @@ export default {
             data: data
         })
     },
+    delete:(data) => {
+        return request({
+            url: '/file/delete',
+            method: 'get',
+            params: data
+        })
+    },
     saveFolder: (data) => {
       return request({
         url: '/file/saveFolder',
@@ -96,9 +103,9 @@ export default {
             params: data
         })
     },
-    getFileID:() => {
+    getFolderID:() => {
         return request({
-            url: '/file/getFileID',
+            url: '/file/getFolderID',
             method: 'get'
         })
     }
