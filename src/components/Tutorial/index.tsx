@@ -59,7 +59,7 @@ const Tutorial = () => {
     };
 
     return <div style={{height:'calc(100vh - 64px)'}}>
-        <Menu onClick={onClick} selectedKeys={[current]} mode="horizontal" items={items} />
+        <Menu style={{userSelect:'none'}} onClick={onClick} selectedKeys={[current]} mode="horizontal" items={items} />
         <Outlet />
     </div>
 }

@@ -16,16 +16,16 @@ const Header = () => {
       } = theme.useToken();
 
     const [open, setOpen] = React.useState(false);
-    const { files } = useSelector(state => state.current)
+    const { type } = useSelector(state => state.current)
 
     const dispatch = useDispatch()
     return (
         <AntdHeader style={{ display: 'flex',flexDirection:'row',justifyContent:'space-between', padding: 0, background: colorBgContainer }} >
           <Player/>
           <div>
-            <Button style={{marginTop:'16px'}} icon={<HomeOutlined />} disabled={files.length === 0} onClick={() => {dispatch(setFolder([[],0,'']))}} >返回首页</Button>
+            <Button style={{marginTop:'16px'}} icon={<HomeOutlined />} disabled={type === ''} onClick={() => {dispatch(setFolder([[],0,'']))}} >返回首页</Button>
             <Divider type='vertical'/>
-            <Button style={{marginTop:'16px'}} icon={<BookOutlined />} disabled={files.length === 0} onClick={() => setOpen(true)} >查看教程</Button>
+            <Button style={{marginTop:'16px'}} icon={<BookOutlined />} disabled={type === ''} onClick={() => setOpen(true)} >查看教程</Button>
             <Drawer
               title='教程'
               placement="right"

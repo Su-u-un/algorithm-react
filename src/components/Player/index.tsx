@@ -1,5 +1,6 @@
 import React, {  useState, useRef, useEffect } from 'react';
 import { Slider, InputNumber ,Button,Radio,Col,Row  } from 'antd';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import {useSelector,useDispatch} from 'react-redux'
 import { setCursor } from '../../store/play';
 import { setBuilding } from '../../store/current';
@@ -89,8 +90,8 @@ const Player: React.FC = () => {
         </Col>
         <Col span={4}>
           <Radio.Group value={progress} onChange={handleBtn}>
-            <Radio.Button value="-1" disabled={!isAble(cursor-1)}>&lt;</Radio.Button>
-            <Radio.Button value="+1" disabled={!isAble(cursor+1)}>&gt;</Radio.Button>
+            <Radio.Button value="-1" disabled={!isAble(cursor-1)}><LeftOutlined /></Radio.Button>
+            <Radio.Button value="+1" disabled={!isAble(cursor+1)}><RightOutlined /></Radio.Button>
           </Radio.Group>
         </Col>
         <Col span={8}>

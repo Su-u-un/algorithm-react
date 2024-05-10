@@ -19,6 +19,7 @@ const Code: React.FC = () => {
       message.info(mes);
     };
 
+    const [modal, contextHolder] = Modal.useModal();
   const {confirm} = Modal
   const { files, folder_id, type } = useSelector(state => state.current)
 
@@ -34,8 +35,8 @@ const Code: React.FC = () => {
 
   const menuClick = (key,value) => {
     if(key === 'edit') {
-      let tempName = ''
-      confirm({
+      let tempName = 'not change';
+      modal.confirm({
         title:'修改名称',
         content:<Input defaultValue={value} onChange={(e)=>{ tempName = e.target.value}} />,
         okText:'确认',
@@ -44,21 +45,15 @@ const Code: React.FC = () => {
           const reg = /^[a-zA-Z0-9_.\-\u4e00-\u9fa5]+$/;
           if (!tempName) {
             info('修改失败，名称不能为空');
+          }else if(tempName === 'not change'){
+            return
           }else if (!reg.test(tempName)) {
             info('请输入大小写字母、数字、中文、_、-');
           } else {
             const temp = cloneDeep(files);
             temp[0].name = tempName;
             dispatch(setFolder([temp, folder_id, type]));
-            console.log(temp)
-            const ada = files.find((file) => file.name === activeKey)
-            const realurl = ada ? ada.realurl : ''
-            console.log({
-              "filename": activeKey,
-              "content": activeText,
-              "realurl": realurl,
-              "folderid": folder_id
-          })
+            save(value,temp[0].name, temp[0].content)
           }
         }
       });
@@ -103,12 +98,12 @@ const Code: React.FC = () => {
 
   const newTabIndex = useRef(0);
 
-  const button = { left: <Button style={{ marginLeft: 8 }} onClick={build}>Build</Button>, right: <Button disabled={type === 'public'} onClick={save}>Save</Button> }
+  const button = { left: <Button style={{ marginLeft: 8 }} onClick={build}>Build</Button>, right: <Button disabled={type === 'public'} onClick={()=>save()}>Save</Button> }
 
   // 点击后把代码发送到服务器，接收返回的命令集
   async function build() {
     // 如果不是合法文件不进行构建
-    if(activeKey.split('.')[activeKey.split('.').length-1] !== 'js') return
+    if(activeKey.split('.')[activeKey.split('.').length-1] !== 'js') {info('不支持的文件类型');return}
     // 通知进度条置1
     dispatch(setBuilding(true))
     // 查找当前active的文件的真实地址，发给后端，后端读取本地文件进行构建。
@@ -183,16 +178,33 @@ const Code: React.FC = () => {
 
 
   // 点击后保存代码
-  function save() {
+  function save(oldname = '', filename = activeKey, content = activeText) {
+    console.log(filename,content)
     // 用当前的key找他对应的realurl，随后发送给后端
-    const temp = files.find((file) => file.name === activeKey)
-    const realurl = temp ? temp.realurl : ''
+    let realurl = ''
+    // 如果传了这个，说明改名，就要找原来的url
+    if(oldname!==''){
+      const temp = files.find((file) => file.name === oldname)
+      realurl = temp.realurl
+    }else{
+      const temp = files.find((file) => file.name === filename)
+      realurl = temp.realurl
+      
+    }
+    
     //存入数据库
     file.save({
-      "filename": activeKey,
-      "content": activeText,
+      "filename": filename,
+      "content": content,
       "realurl": realurl,
       "folderid": folder_id
+    }).then(res => {
+      // 不存在说明是新建的文件,把返回的realurl存入
+      if(!realurl) {
+        const temp = cloneDeep(files);
+        temp[0].realurl = res.data;
+        dispatch(setFolder([temp, folder_id, type]));
+      }
     })
   }
 
@@ -205,7 +217,6 @@ const Code: React.FC = () => {
 
   // 增加tab
   const add = () => {
-    // tab key 删除的时候用
     const newActiveKey = `new${newTabIndex.current++}`;
     // tab pane 所有tab的数组
     const newPanes: any = cloneDeep(items);
@@ -274,6 +285,7 @@ const Code: React.FC = () => {
   };
 
   return (
+    <>
     <Tabs
       hideAdd={type === 'public' ? true : false}
       centered={true}
@@ -285,6 +297,9 @@ const Code: React.FC = () => {
       items={items}
       style={{ height: '100%', width: '100%' }}
     />
+      {contextHolder}
+    </>
+    
   )
 }
 

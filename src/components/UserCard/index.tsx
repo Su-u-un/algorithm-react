@@ -22,7 +22,7 @@ const UserCard = () => {
 
     return (
         <Dropdown menu={{ items }} placement="bottomRight" arrow>
-          <div style={{marginRight:'20px',marginTop:'10px',height:'40px',lineHeight:'40px'}}>
+          <div style={{userSelect:'none', marginRight:'20px',marginTop:'10px',height:'40px',lineHeight:'40px'}}>
             <span style={{marginRight:'20px'}}>{username}</span>
             <Avatar size={'small'} icon={<UserOutlined />} />
           </div>

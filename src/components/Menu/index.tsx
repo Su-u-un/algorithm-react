@@ -3,7 +3,7 @@ import { Tree, Button, Dropdown, Menu, message, Modal,Input, Divider } from 'ant
 import styles from './Menu.module.less'
 import DropdownInput from "../DropdownInput";
 import { useDispatch,useSelector } from 'react-redux';
-import { getUserInfo,setFileInfo } from '../../util/auth'
+import { getFileInfo, getUserInfo,setFileInfo } from '../../util/auth'
 import { setFolder } from '../../store/current'
 import { DashOutlined } from '@ant-design/icons'
 import file from '../../api/file';
@@ -149,9 +149,6 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
           file.deleteFolder({id:node.id})
         }else{
           file.deleteAlgo({id:node.id})
-          // localStorage内修改
-          // const arr = data.filter((item: any) => item.algo_type !== node.key)
-          // setFileInfo(JSON.stringify(arr))
           // 重新保存storage内的数据
           file.list({username:username}).then((res: any) => {
             setFileInfo(JSON.stringify(res.data))
@@ -258,10 +255,6 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
 
     // 有输入内容就更新
       setTreeData(updateItem(treeData, node, value));
-      // 重新保存storage内的数据
-      file.list({username:username}).then((res: any) => {
-        setFileInfo(JSON.stringify(res.data))
-      })
   };
   // updateItem 
   // 根据key 找到正在输入的节点，将输入内容更新到title（显示节点的名字），并删除之前的isInput属性
@@ -271,8 +264,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
         // 如果是新增叶子
         if(node.isAdd){
           // 通过propKey找到树的id
-          console.log(data)
-          const algoid = data.find(item=>item.algo_type === node.propKey).id
+          const algoid = JSON.parse(getFileInfo()!).find(item=>item.algo_type === node.propKey).id
           file.saveFolder({algoid:algoid,id:node.id,foldername:value})
         }
         // 否则是编辑
@@ -286,6 +278,11 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
           // 否则是编辑树
           else{
             file.saveAlgo({id:node.id,algotype:value,username:username})
+            // 重新保存storage内的数据
+            const temp = data.map((item)=>{
+              return item.id === node.id ? {...item,algo_type:value} : item
+            })
+            setFileInfo(JSON.stringify(temp))
           }
         }
         item.title = value;
