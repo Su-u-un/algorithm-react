@@ -4,10 +4,13 @@ import styles from './Menu.module.less'
 import DropdownInput from "../DropdownInput";
 import { useDispatch,useSelector } from 'react-redux';
 import { getFileInfo, getUserInfo,setFileInfo } from '../../util/auth'
+import hasKey from "../../util"
 import { setFolder } from '../../store/current'
+import { setCursor } from '../../store/play';
 import { DashOutlined } from '@ant-design/icons'
 import file from '../../api/file';
 import _ from 'lodash';
+import { setAlgo } from '../../store/file';
 
 const { DirectoryTree } = Tree
 interface MenuProps {
@@ -33,6 +36,8 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   const [algoVal,setAlgoVal] = useState("")
   const [err,setErr] = useState(false)
 
+  const {algo} = useSelector(state => state.file)
+
   const dispatch = useDispatch();
 
   // 发出通知
@@ -48,17 +53,6 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
     setTreeData(arr)
   }, [])
 
-  // 判断对象数组内是否存在key
-  const hasKey = (arr:any, key:string, showKey:boolean = false) => {
-    if(showKey){
-      return {
-        res:arr.some(item => item.key === key),
-        key:key
-      }
-    }
-    return arr.some(item => item.key === key)
-  }
-
   // ============
   // 创建新算法类
   // ============
@@ -66,7 +60,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
     if(err){
       info('请输入大小写字母、数字、中文、_、-');
     }// 判断是否已存在该文件夹名称
-    else if(hasKey(data,algoVal)){
+    else if(hasKey(data,'algo_type',algoVal)){
         info('该文件夹已存在')
     }else{
       const res = await file.saveAlgo({id:null,algotype:algoVal,username:username})
@@ -85,9 +79,11 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
         setExpandedKeys(expands);
       }
       setShow(false)
+      setAlgoVal("")
       // 重新保存storage内的数据
       file.list({username:username}).then((res: any) => {
-        setFileInfo(JSON.stringify(res.data))
+        // setFileInfo(JSON.stringify(res.data))
+        dispatch(setAlgo(res.data))
       })
     }
   }
@@ -149,10 +145,14 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
           file.deleteFolder({id:node.id})
         }else{
           file.deleteAlgo({id:node.id})
+          // // 重新保存storage内的数据
+          // file.list({username:username}).then((res: any) => {
+          //   setFileInfo(JSON.stringify(res.data))
+          // })
           // 重新保存storage内的数据
-          file.list({username:username}).then((res: any) => {
-            setFileInfo(JSON.stringify(res.data))
-          })
+          const temp = data.filter((item)=>item.id !== node.id)
+          // setFileInfo(JSON.stringify(temp))
+          dispatch(setAlgo(temp))
         }
         // 如果节点的key匹配要删除的key，则返回undefined，表示不包括该节点
         return undefined;
@@ -225,7 +225,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
         // 得到当前叶子的父节点
         const tree = treeData.find((item: any) => item.key === node.propKey);
         // 判断它的兄弟叶子
-        if(hasKey(tree.children,value)){
+        if(hasKey(tree.children,'key',value)){
           info('文件名不能重名');
           return;
         }
@@ -241,12 +241,12 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
           // 得到当前叶子的父节点
           const tree = treeData.find((item: any) => item.key === node.propKey);
           // 判断它的兄弟叶子，不和兄弟和重名但是和自己重名
-          if(hasKey(tree.children,value,true).res && hasKey(tree.children,value,true).key !== node.key){
+          if(hasKey(tree.children,'key',value,true).res && hasKey(tree.children,'key',value,true).key !== node.key){
             info('文件名不能重名')
             return;
           }
         }else{
-          if(hasKey(data,value)){
+          if(hasKey(data,'algo_type',value)){
             info('文件名不能重名');
             return;
           }
@@ -264,7 +264,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
         // 如果是新增叶子
         if(node.isAdd){
           // 通过propKey找到树的id
-          const algoid = JSON.parse(getFileInfo()!).find(item=>item.algo_type === node.propKey).id
+          const algoid = algo.find(item=>item.algo_type === node.propKey).id
           file.saveFolder({algoid:algoid,id:node.id,foldername:value})
         }
         // 否则是编辑
@@ -282,7 +282,8 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
             const temp = data.map((item)=>{
               return item.id === node.id ? {...item,algo_type:value} : item
             })
-            setFileInfo(JSON.stringify(temp))
+            // setFileInfo(JSON.stringify(temp))
+            dispatch(setAlgo(temp))
           }
         }
         item.title = value;
@@ -342,6 +343,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   // 叶子节点选中事件
   const onSelect = async (keys,info) => {
     const { id } = info.node
+    dispatch(setCursor(0))
     if(id){
       // 点击拿到文件内容，存入store，代码区读取store，渲染代码并且build
       const res = await file.readFile({
@@ -397,7 +399,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
         ?
         <>
           <Button onClick={()=>setShow(true)} style={{margin:'10px 67px'}}>add new algo</Button>
-          <Modal title="请输入文件夹名称" open={show} onOk={addAlgo} onCancel={()=>setShow(false)}>
+          <Modal title="请输入文件夹名称" open={show} onOk={addAlgo} onCancel={()=>{setShow(false);setAlgoVal("")}}>
             <Input 
               value={algoVal}
               onChange={(e) => {

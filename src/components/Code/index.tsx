@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setChunks, setCursor, setLineIndicator } from "../../store/play";
 import { setBuilding,setFolder } from "../../store/current"
 import Editor from "../Editor";
+import hasKey from "../../util"
 import DropdownInput from "../DropdownInput";
 import MoadlInput from "../MoadlInput";
 
@@ -19,7 +20,7 @@ const Code: React.FC = () => {
       message.info(mes);
     };
 
-    const [modal, contextHolder] = Modal.useModal();
+  const [modal, contextHolder] = Modal.useModal();
   const {confirm} = Modal
   const { files, folder_id, type } = useSelector(state => state.current)
 
@@ -96,8 +97,6 @@ const Code: React.FC = () => {
     data => setActiveText(data)
     , [])
 
-  const newTabIndex = useRef(0);
-
   const button = { left: <Button style={{ marginLeft: 8 }} onClick={build}>Build</Button>, right: <Button disabled={type === 'public'} onClick={()=>save()}>Save</Button> }
 
   // 点击后把代码发送到服务器，接收返回的命令集
@@ -108,8 +107,8 @@ const Code: React.FC = () => {
     dispatch(setBuilding(true))
     // 查找当前active的文件的真实地址，发给后端，后端读取本地文件进行构建。
     const temp = files.find((file) => file.name === activeKey)
-    // 如果没有url，说明是新建文件，不做处理
-    if(!temp || !temp.realurl) return
+    // 如果没有url而且有folder_id，说明是新建文件，不做处理
+    if(!temp || (!temp.realurl&&folder_id)) return
 
     // 判断是用户文件还是公共文件，如果是用户文件就保存再构建，如果公共文件直接发送构建
     if (type === 'list') {
@@ -179,7 +178,6 @@ const Code: React.FC = () => {
 
   // 点击后保存代码
   function save(oldname = '', filename = activeKey, content = activeText) {
-    console.log(filename,content)
     // 用当前的key找他对应的realurl，随后发送给后端
     let realurl = ''
     // 如果传了这个，说明改名，就要找原来的url
@@ -201,8 +199,9 @@ const Code: React.FC = () => {
     }).then(res => {
       // 不存在说明是新建的文件,把返回的realurl存入
       if(!realurl) {
-        const temp = cloneDeep(files);
-        temp[0].realurl = res.data;
+        const temp = cloneDeep(files).map((item) => {
+          return item.name === filename ? {...item, realurl: res.data} : item
+        })
         dispatch(setFolder([temp, folder_id, type]));
       }
     })
@@ -217,23 +216,38 @@ const Code: React.FC = () => {
 
   // 增加tab
   const add = () => {
-    const newActiveKey = `new${newTabIndex.current++}`;
-    // tab pane 所有tab的数组
-    const newPanes: any = cloneDeep(items);
-    newPanes.push({
-      label: newActiveKey + '.js',
-      children: Editor({ data: '', onChange: (e: any) => handleChange(e) }),
-      key: newActiveKey
-    });
-    const temp = cloneDeep(files);
-    temp.push({
-      name: newActiveKey + '.js',
-      content: '',
-      realurl: ''
+    let tempName = '';
+    confirm({
+      title:"新建文件",
+      content:<Input onChange={(e)=>{ tempName = e.target.value}} />,
+      okText:'确认',
+      cancelText:'取消',
+      onOk:()=>{
+        if(hasKey(items,'key',tempName)){
+          info('文件名不能重复')
+        }else if(!tempName){
+          return
+        }else if(!/^[a-zA-Z0-9_.\-\u4e00-\u9fa5]+$/.test(tempName)){
+          info('请输入大小写字母、数字、中文、_、-')
+        }else{
+          const newPanes: any = cloneDeep(items);
+          newPanes.push({
+              label: tempName,
+              children: Editor({ data: '', onChange: (e: any) => handleChange(e) }),
+              key: tempName
+          });
+          const temp = cloneDeep(files);
+          temp.push({
+            name: tempName,
+            content: '',
+            realurl: ''
+          })
+          dispatch(setFolder([temp, folder_id, type]));
+          setItems(newPanes);
+          setActiveKey(tempName);
+        }
+      }
     })
-    dispatch(setFolder([temp, folder_id, type]));
-    setItems(newPanes);
-    setActiveKey(newActiveKey);
   };
 
   // 删除tab
@@ -245,30 +259,29 @@ const Code: React.FC = () => {
       cancelText:'取消',
       onOk:()=>{
         let newActiveKey = activeKey;
-    let lastIndex = -1;
-    items.forEach((item, i) => {
-      if (item.key === targetKey) {
-        lastIndex = i - 1;
-      }
-    });
+        let lastIndex = -1;
+        items.forEach((item, i) => {
+          if (item.key === targetKey) {
+            lastIndex = i - 1;
+          }
+        });
 
-    const newPanes = items.filter((item) => item.key !== targetKey);
+        const newPanes = items.filter((item) => item.key !== targetKey);
 
-    if (newPanes.length && newActiveKey === targetKey) {
-      if (lastIndex >= 0) {
-        newActiveKey = newPanes[lastIndex].key;
-      } else {
-        newActiveKey = newPanes[0].key;
-      }
-    }
-    setItems(newPanes);
-    setActiveKey(newActiveKey);
+        if (newPanes.length && newActiveKey === targetKey) {
+          if (lastIndex >= 0) {
+            newActiveKey = newPanes[lastIndex].key;
+          } else {
+            newActiveKey = newPanes[0].key;
+          }
+        }
+        setItems(newPanes);
+        setActiveKey(newActiveKey);
         // 找到删除文件的realurl，发送后端
         const temp = files.find((file) => file.name === targetKey)
         file.delete({realurl:temp.realurl})
       }
     });
-    
   };
 
   // 监听tab变化，targetKey如果add是click event

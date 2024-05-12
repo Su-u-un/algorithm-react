@@ -25,6 +25,7 @@ const Charts = () => {
         if (cursor > oldCursor) {
           applyingChunks = chunks.slice(oldCursor, cursor);
         } else {
+            console.log('chongzhi')
           reset();
           applyingChunks = chunks.slice(0, cursor);
         }

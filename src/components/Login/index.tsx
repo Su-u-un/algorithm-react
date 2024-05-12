@@ -2,6 +2,8 @@ import React, { forwardRef,useImperativeHandle, useRef, useState } from 'react'
 import { Form, Input, Button,message,Space } from 'antd';
 import { setToken, setFileInfo, setUserInfo, setPublicInfo } from '../../util/auth';
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import { setAlgo } from '../../store/file';
 import user from '../../api/user'
 
 type PhoneType = {
@@ -16,6 +18,7 @@ let timer = null
 
 const Login = (props:any,ref:any) => {
     const [form] = Form.useForm();
+    const dispatch = useDispatch()
 
     // 向父组件暴露form
     useImperativeHandle(ref, () => ({
@@ -76,7 +79,8 @@ const Login = (props:any,ref:any) => {
             });
             if(res.code === '0'){
                 // 存入用户信息、文件信息、公共文件信息和token
-                setFileInfo(JSON.stringify(res.list))
+                dispatch(setAlgo(res.list))
+                // setFileInfo(JSON.stringify(res.list))
                 setUserInfo(JSON.stringify(res.username))
                 setPublicInfo(JSON.stringify(res.public))
                 setToken(JSON.stringify(res.token))
