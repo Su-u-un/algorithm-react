@@ -7,7 +7,7 @@ axios.defaults.timeout = 100000
 axios.defaults.withCredentials = true
 axios.defaults.headers = {'Content-Type': 'application/json; charset=utf-8'}
 // 对面暴露的基础请求路径
-axios.defaults.baseURL = 'http://localhost:3000/'
+axios.defaults.baseURL = 'http://47.242.73.45:3000'
 
 /**
  * 请求拦截
