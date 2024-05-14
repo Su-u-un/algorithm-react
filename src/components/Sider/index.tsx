@@ -1,7 +1,7 @@
-import React, { useEffect,useState } from 'react';
+import React from 'react';
 import Menu from '../Menu';
 import { Divider ,theme } from 'antd';
-import { getFileInfo,getPublicInfo } from '../../util/auth';
+import { getPublicInfo } from '../../util/auth';
 import { useSelector } from 'react-redux';
 
 const Sider = ()=>{

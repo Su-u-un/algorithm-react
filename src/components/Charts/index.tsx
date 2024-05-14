@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef,useLayoutEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as TracerClasses from '../../tracers';
 import * as LayoutClasses from '../../layouts';
-import { useSelector,useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 
 const Charts = () => {
@@ -25,7 +25,6 @@ const Charts = () => {
         if (cursor > oldCursor) {
           applyingChunks = chunks.slice(oldCursor, cursor);
         } else {
-            console.log('chongzhi')
           reset();
           applyingChunks = chunks.slice(0, cursor);
         }

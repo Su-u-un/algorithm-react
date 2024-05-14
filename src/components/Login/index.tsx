@@ -1,6 +1,6 @@
-import React, { forwardRef,useImperativeHandle, useRef, useState } from 'react'
+import React, { forwardRef,useImperativeHandle, useState } from 'react'
 import { Form, Input, Button,message,Space } from 'antd';
-import { setToken, setFileInfo, setUserInfo, setPublicInfo } from '../../util/auth';
+import { setToken, setUserInfo, setPublicInfo } from '../../util/auth';
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from 'react-redux';
 import { setAlgo } from '../../store/file';

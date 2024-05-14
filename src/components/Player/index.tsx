@@ -1,4 +1,4 @@
-import React, {  useState, useRef, useEffect } from 'react';
+import React, {  useState, useEffect } from 'react';
 import { Slider, InputNumber ,Button,Radio,Col,Row  } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import {useSelector,useDispatch} from 'react-redux'

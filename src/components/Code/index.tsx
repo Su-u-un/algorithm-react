@@ -1,15 +1,12 @@
-import React, { useEffect, useRef, useState, useCallback, useLayoutEffect } from "react";
-import styles from './Code.module.less'
-import { debounce, cloneDeep, merge } from 'lodash';
+import React, { useEffect, useState, useCallback } from "react";
+import { cloneDeep } from 'lodash';
 import { Tabs, Button, Input, Dropdown,Modal,Menu,message } from 'antd';
-import file from '../../api/file'
+import file from 'src/api/file'
 import { useDispatch, useSelector } from "react-redux";
-import { setChunks, setCursor, setLineIndicator } from "../../store/play";
-import { setBuilding,setFolder } from "../../store/current"
+import { setChunks, setCursor, setLineIndicator } from "src/store/play";
+import { setBuilding,setFolder } from "src/store/current"
 import Editor from "../Editor";
-import hasKey from "../../util"
-import DropdownInput from "../DropdownInput";
-import MoadlInput from "../MoadlInput";
+import hasKey from "src/util"
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
@@ -20,7 +17,6 @@ const Code: React.FC = () => {
       message.info(mes);
     };
 
-  const [modal, contextHolder] = Modal.useModal();
   const {confirm} = Modal
   const { files, folder_id, type } = useSelector(state => state.current)
 
@@ -37,7 +33,7 @@ const Code: React.FC = () => {
   const menuClick = (key,value) => {
     if(key === 'edit') {
       let tempName = 'not change';
-      modal.confirm({
+      confirm({
         title:'修改名称',
         content:<Input defaultValue={value} onChange={(e)=>{ tempName = e.target.value}} />,
         okText:'确认',
@@ -298,7 +294,6 @@ const Code: React.FC = () => {
   };
 
   return (
-    <>
     <Tabs
       hideAdd={type === 'public' ? true : false}
       centered={true}
@@ -310,9 +305,6 @@ const Code: React.FC = () => {
       items={items}
       style={{ height: '100%', width: '100%' }}
     />
-      {contextHolder}
-    </>
-    
   )
 }
 

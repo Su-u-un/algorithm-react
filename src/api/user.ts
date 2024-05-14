@@ -2,7 +2,7 @@ import request from '../util/api'
 
 export default{
     // === 登录 ===
-    login: (data) => {
+    login: (data: object) => {
         return request({
           url: '/user/login',
           method: 'post',
@@ -10,7 +10,7 @@ export default{
         })
       },
     // === 登录验证码 === 
-    loginCaptcha: (data) => {
+    loginCaptcha: (data: object) => {
         return request({
           url: '/user/loginCaptcha',
           method: 'post',
@@ -18,7 +18,7 @@ export default{
         })
     },
     // === 注册 ===
-    register: (data) => {
+    register: (data: object) => {
         return request({
           url: '/user/register',
           method: 'post',
@@ -26,7 +26,7 @@ export default{
         })
     },
     // === 注册验证码 ===
-    registerCaptcha: (data) => {
+    registerCaptcha: (data: object) => {
         return request({
           url: '/user/registerCaptcha',
           method: 'post',

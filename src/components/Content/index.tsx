@@ -1,6 +1,6 @@
 import React from "react"
 import { Layout } from 'antd';
-import {SplitPane} from 'react-split-pane';
+import { SplitPane } from 'react-split-pane';
 import Charts from '../Charts';
 import Right from '../Right';
 

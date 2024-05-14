@@ -46,11 +46,12 @@ class Layout {
   render() {
     return(
       <SplitPane split='horizontal' >
-        {this.children.map(tracer => {
+        {
+        this.children.map(tracer => {
           const size = 100/this.children.length + '%'
           return <Pane className={styles.pane} initialSize={size}>{tracer && tracer.render()}</Pane>
-          }
-        )}
+        })
+        }
       </SplitPane>
           
     )

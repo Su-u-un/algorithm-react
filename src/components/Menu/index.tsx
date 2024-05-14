@@ -3,7 +3,7 @@ import { Tree, Button, Dropdown, Menu, message, Modal,Input, Divider } from 'ant
 import styles from './Menu.module.less'
 import DropdownInput from "../DropdownInput";
 import { useDispatch,useSelector } from 'react-redux';
-import { getFileInfo, getUserInfo,setFileInfo } from '../../util/auth'
+import { getUserInfo } from '../../util/auth'
 import hasKey from "../../util"
 import { setFolder } from '../../store/current'
 import { setCursor } from '../../store/play';

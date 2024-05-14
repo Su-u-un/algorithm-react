@@ -1,7 +1,6 @@
 import React,{useState} from 'react'
-import { Form, Input, Button,message,Space,Image } from 'antd';
+import { Form, Input, Button,message,Space } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'
 import user from '../../api/user'
 
 type FieldType = {

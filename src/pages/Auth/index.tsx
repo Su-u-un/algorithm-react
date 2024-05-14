@@ -1,4 +1,4 @@
-import React,{useRef, useState} from 'react';
+import React,{useState} from 'react';
 import { Button, Tabs, Layout, Space } from 'antd';
 import Login from '../../components/Login';
 import Register from '../../components/Register';

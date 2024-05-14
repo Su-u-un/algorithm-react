@@ -2,21 +2,21 @@ import request from '../util/api'
 
 export default {
     // === 构建 ===
-    build: (data) => {
+    build: (data: object) => {
         return request({
             url: '/file/build',
             method: 'post',
             data: data
         })
     },
-    delete:(data) => {
+    delete:(data: object) => {
         return request({
             url: '/file/delete',
             method: 'get',
             params: data
         })
     },
-    saveFolder: (data) => {
+    saveFolder: (data: object) => {
       return request({
         url: '/file/saveFolder',
         method: 'post',
@@ -24,7 +24,7 @@ export default {
       })  
     },
     // === 获取公共文件 ===
-    readPublic: (data) => {
+    readPublic: (data: object) => {
         return request({
             url: '/file/readPublic',
             method: 'get',
@@ -32,7 +32,7 @@ export default {
         })
     },
     // === 获取公共文件名 ===
-    readFolderPublic:(data) => {
+    readFolderPublic:(data: object) => {
         return request({
             url: '/file/readFolderPublic',
             method: 'get',
@@ -40,7 +40,7 @@ export default {
         })  
     },
     // === 删除folder ===
-    deleteFolder:(data)=>{
+    deleteFolder:(data: object)=>{
         return request({
             url: '/file/deleteFolder',
             method: 'get',
@@ -48,7 +48,7 @@ export default {
         })
     },
     // === 获取文件 ===
-    readFile: (data) => {
+    readFile: (data: object) => {
         return request({
             url: '/file/readFile',
             method: 'get',
@@ -56,7 +56,7 @@ export default {
         })
     },
     // === 获取子文件名 ===
-    readFolder:(data) => {
+    readFolder:(data: object) => {
         return request({
             url: '/file/readFolder',
             method: 'get',
@@ -64,7 +64,7 @@ export default {
         })
     },
     // === 保存 ===
-    save : ({filename,content,realurl ='',folderid = ''}) => {
+    save : ({filename,content,realurl ='',folderid = ''}:any) => {
         return request({
             url: '/file/save',
             method: 'post',
@@ -77,7 +77,7 @@ export default {
         })
     },
     // === saveAlgo ===
-    saveAlgo: ({id,algotype,username}) => {
+    saveAlgo: ({id,algotype,username}:any) => {
         return request({
             url: '/file/saveAlgo',
             method: 'post',
@@ -89,14 +89,14 @@ export default {
         })
     },
     // 删除Algo
-    deleteAlgo:(data) => {
+    deleteAlgo:(data: object) => {
         return request({
             url: '/file/deleteAlgo',
             method: 'get',
             params: data
         })
     },
-    list:(data) => {
+    list:(data: object) => {
         return request({
             url: '/file/list',
             method: 'get',
