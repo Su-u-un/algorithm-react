@@ -1,5 +1,6 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const webpack = require('webpack')
 
 module.exports = {
     entry:path.join(__dirname,"../src/main.tsx"),
@@ -26,6 +27,9 @@ module.exports = {
         extensions:['.js','.tsx','.ts']
     },
     plugins:[
+        new webpack.DefinePlugin({
+            'process.env': JSON.stringify(process.env)
+        }),
         new HtmlWebpackPlugin({
             template: path.resolve(__dirname, '../public/index.html'), // 模板取定义root节点的模板
             inject: true, // 自动注入静态资源
