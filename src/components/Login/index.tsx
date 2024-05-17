@@ -97,6 +97,7 @@ const Login = (props:any,ref:any) => {
 
 
     return (
+        // 区分手机号登录and用户名登录
         type === 'phone' ?
         <Form
             form={form}
@@ -151,7 +152,7 @@ const Login = (props:any,ref:any) => {
             <Form.Item<PwdType>
                 name="username"
             >
-                <Input size='large' addonBefore="+86" placeholder='请输入用户名'/>
+                <Input size='large' placeholder='请输入用户名'/>
             </Form.Item>
 
             <Form.Item<PwdType>

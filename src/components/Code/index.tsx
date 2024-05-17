@@ -69,6 +69,12 @@ const Code: React.FC = () => {
             </Dropdown>
             :
             file.name,
+          closable:
+            type === 'list'
+            ,
+            true
+            :
+            false,
           children: Editor({ data: file.content, onChange: (e: any) => handleChange(e) }),
           key: file.name,
           realurl:file.realurl
@@ -98,7 +104,14 @@ const Code: React.FC = () => {
   // 点击后把代码发送到服务器，接收返回的命令集
   async function build() {
     // 如果不是合法文件不进行构建
-    if(activeKey.split('.')[activeKey.split('.').length-1] !== 'js') {info('不支持的文件类型');return}
+    if(activeKey.split('.')[activeKey.split('.').length-1] !== 'js') {
+      info('不支持的文件类型');
+      // 清除store内数据
+      dispatch(setChunks([]));
+      dispatch(setCursor(0));
+      dispatch(setLineIndicator(undefined))
+      return
+    }
     // 通知进度条置1
     dispatch(setBuilding(true))
     // 查找当前active的文件的真实地址，发给后端，后端读取本地文件进行构建。
@@ -118,9 +131,20 @@ const Code: React.FC = () => {
           'content': activeText
         });
         const commands = response.data
-        if(commands === 'err') info('构建失败，请检查代码格式是否正确')
+        if(commands === 'err') {
+          info('构建失败，请检查代码格式是否正确')
+          // 清除store内数据
+          dispatch(setChunks([]));
+          dispatch(setCursor(1));
+          dispatch(setLineIndicator(undefined))
+        }
         else if(commands.constructor  !== Array) {
+          // 说明是其他代码
           eval(commands)
+          // 清除store内数据
+          dispatch(setChunks([]));
+          dispatch(setCursor(0));
+          dispatch(setLineIndicator(undefined))
         }
         else{
           reset(commands);

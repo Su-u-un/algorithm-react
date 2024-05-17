@@ -83,9 +83,9 @@ const Player: React.FC = () => {
         <Col span={4}>
           {
           playing ? 
-            <Button onClick={pause}>pause</Button> 
+            <Button disabled={chunks.length === 0} onClick={pause}>pause</Button> 
           :
-            <Button onClick={play}>play</Button>
+            <Button disabled={chunks.length === 0} onClick={play}>play</Button>
           }
         </Col>
         <Col span={4}>
