@@ -99,7 +99,7 @@ const Code: React.FC = () => {
     data => setActiveText(data)
     , [])
 
-  const button = { left: <Button style={{ marginLeft: 8 }} onClick={build}>Build</Button>, right: <Button disabled={type === 'public'} onClick={()=>save()}>Save</Button> }
+  const button = { left: <Button style={{ marginLeft: 8 }} disabled={files.length === 0} onClick={build}>Build</Button>, right: <Button disabled={type === 'public'||files.length === 0} onClick={()=>save()}>Save</Button> }
 
   // 点击后把代码发送到服务器，接收返回的命令集
   async function build() {

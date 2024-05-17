@@ -29,6 +29,7 @@ const Player: React.FC = () => {
 
   // 监听是否更换目录
   useEffect(()=>{
+    pause()
     setProgress(1)
   },[files])
 
