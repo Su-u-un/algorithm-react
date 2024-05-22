@@ -48,7 +48,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
   // 处理传入的文件数据
   useEffect(() => {
     const arr = data.map((item: any) => {
-      return { title: item.algo_type, key: item.algo_type, id: item.id, selectable: false, isInput: false}
+      return { title: item.algo_type, key: 'algo-'+item.algo_type, id: item.id, selectable: false, isInput: false}
     })
     setTreeData(arr)
   }, [])
@@ -69,7 +69,7 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
             title: algoVal,
             id:res.data.insertId,
             isInput: false,
-            key: algoVal,
+            key: 'algo-'+algoVal,
             selectable: false
           };
       setTreeData([temp, ...treeData]);
@@ -264,7 +264,9 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
         // 如果是新增叶子
         if(node.isAdd){
           // 通过propKey找到树的id
-          const algoid = algo.find(item=>item.algo_type === node.propKey).id
+          //对tree的key做处理，删去前缀
+          const tempKey = node.propKey.split('-')[node.propKey.split('-').length-1]
+          const algoid = algo.find(item=>item.algo_type === tempKey).id
           file.saveFolder({algoid:algoid,id:node.id,foldername:value})
         }
         // 否则是编辑
@@ -272,8 +274,11 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
           // 如果是编辑叶子
           if(node.isLeaf){
             // 通过propKey找到树的id
-            const algoid = data.find(item=>item.algo_type === node.propKey).id
+            //对tree的key做处理，删去前缀
+            const tempKey = node.propKey.split('-')[node.propKey.split('-').length-1]
+            const algoid = data.find(item=>item.algo_type === tempKey).id
             file.saveFolder({algoid:algoid,id:node.id,foldername:value})
+            item.key = value;
           }
           // 否则是编辑树
           else{
@@ -284,10 +289,10 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
             })
             // setFileInfo(JSON.stringify(temp))
             dispatch(setAlgo(temp))
+            item.key = 'algo-'+value;
           }
         }
         item.title = value;
-        item.key = value;
         return _.chain(item).omit("isInput","isAdd").set("selectable", true).value();
       } else if (item?.children) {
         return { ...item, children: updateItem(item?.children, node, value) };
@@ -352,8 +357,10 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
       dispatch(setFolder([res.data,id,type]))
     }
     else{
+      //对tree的key做处理，删去前缀
+      const tempKey = info.node.propKey.split('-')[info.node.propKey.split('-').length-1]
       const res = await file.readPublic({
-        'algotype':info.node.propKey,
+        'algotype':tempKey,
         'foldername':keys[0]
       })
       dispatch(setFolder([res.data,'',type]))
@@ -378,14 +385,18 @@ const BaseMenu: React.FC<MenuProps> = (props) => {
         return;
       }
       const res = await file.readFolder({id:tree.id})
+      //对tree的key做处理，删去前缀
+      const tempKey = tree.key.split('-')[tree.key.split('-').length-1]
       arr = res.data.map((file: any) => {
-        return { title: file.folder_name, key: file.folder_name, id: file.id,propKey:tree.key, isLeaf: true}
+        return { title: file.folder_name, key: file.folder_name, id: file.id,propKey:tempKey, isLeaf: true}
       })
     }
     else{
-      const res = await file.readFolderPublic({foldername:tree.key})
+      const tempKey = tree.key.split('-')[tree.key.split('-').length-1]
+      const res = await file.readFolderPublic({foldername:tempKey})
+      //对tree的key做处理，删去前缀
       arr = res.data.map((file: any) => {
-        return { title: file.folder_name, key: file.folder_name, propKey:tree.key,isLeaf: true}
+        return { title: file.folder_name, key: file.folder_name, propKey:tempKey,isLeaf: true}
       })
     }
     setTreeData(origin=>updateTreeData(origin,key,arr))
